@@ -1,0 +1,25 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: native
+  cloud:
+    config:
+      server:
+        native:
+          searchLocations:
+            - classpath:config/core/{application}
+            - classpath:config/infra/{application}
+            - classpath:config/stats/{application}
+
+
+eureka:
+  instance:
+    hostname: localhost
+    instance-id: "${spring.application.name}:${random.value}"
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka

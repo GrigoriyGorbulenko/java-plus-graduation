@@ -28,8 +28,9 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
-    private final EventRepository eventRepository;
     private final StatClient statClient;
+    private final EventRepository eventRepository;
+
 
     @Override
     @Transactional
@@ -121,8 +122,8 @@ public class CompilationServiceImpl implements CompilationService {
         }
         LocalDateTime minTime = events.stream().map(Event::getCreatedOn).min(Comparator.comparing(Function.identity())).get();
         List<String> urisList = events.stream().map(event -> "/events/" + event.getId()).toList();
-        String uris = String.join(", ", urisList);
-        List<StatsDto> statsList = statClient.getStats(minTime.minusSeconds(1), LocalDateTime.now(), uris, false);
+
+        List<StatsDto> statsList = statClient.getStats(minTime.minusSeconds(1), LocalDateTime.now(), urisList, false);
         return events.stream().map(event -> {
                     Optional<StatsDto> result = statsList.stream()
                             .filter(statsDto -> statsDto.getUri().equals("/events/" + event.getId()))
@@ -136,4 +137,3 @@ public class CompilationServiceImpl implements CompilationService {
                 .collect(Collectors.toList());
     }
 }
-

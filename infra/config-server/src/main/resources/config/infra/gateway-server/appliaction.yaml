@@ -1,0 +1,22 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: admin_route
+          uri: lb://main-service
+          predicates:
+            - Path=/admin/**
+        - id: users_route
+          uri: lb://main-service
+          predicates:
+            - Path=/users/{userId}/**
+        - id: public_routes
+          uri: lb://main-service
+          predicates:
+            - Path=/{segment:(?:categories|comments|compilations|events)}/**
