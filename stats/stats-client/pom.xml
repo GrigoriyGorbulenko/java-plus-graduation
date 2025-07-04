@@ -10,7 +10,6 @@
     </parent>
 
     <artifactId>stats-client</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
