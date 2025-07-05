@@ -19,6 +19,7 @@ public class CommentMapper {
                 .eventId(comment.getEvent().getId())
                 .eventName(comment.getEvent().getAnnotation())
                 .authorName(comment.getAuthor().getName())
+                .likes(comment.getLikes().size())
                 .created(comment.getCreated())
                 .build();
     }

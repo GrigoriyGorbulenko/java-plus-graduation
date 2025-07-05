@@ -59,6 +59,6 @@ public class Event {
 
     @Column(name = "request_moderation")
     Boolean requestModeration;
-
+    Boolean commenting;
     String title;
 }

@@ -1,6 +1,7 @@
 package ru.practicum.ewm.comment.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -12,5 +13,6 @@ import lombok.experimental.FieldDefaults;
 @Setter
 public class NewCommentDto {
     @NotBlank
+    @Size(min = 3, max = 512)
     String text;
 }

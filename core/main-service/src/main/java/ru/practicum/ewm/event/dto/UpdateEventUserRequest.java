@@ -35,4 +35,5 @@ public class UpdateEventUserRequest {
     @Size(min = 3, max = 120)
     String title;
     StateAction stateAction;
+    Boolean commenting;
 }

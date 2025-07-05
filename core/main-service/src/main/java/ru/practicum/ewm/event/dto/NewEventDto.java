@@ -37,4 +37,5 @@ public class NewEventDto {
     @NotBlank
     @Size(min = 3, max = 120)
     String title;
+    Boolean commenting;
 }

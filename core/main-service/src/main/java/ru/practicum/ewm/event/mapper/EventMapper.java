@@ -32,6 +32,7 @@ public class EventMapper {
                 .participantLimit(eventDto.getParticipantLimit())
                 .requestModeration(eventDto.getRequestModeration())
                 .initiator(initiator)
+                .commenting(eventDto.getCommenting())
                 .build();
     }
 
@@ -53,6 +54,7 @@ public class EventMapper {
                 .requestModeration(event.getRequestModeration())
                 .state(event.getState())
                 .title(event.getTitle())
+                .commenting(event.getCommenting())
                 .build();
     }
 
@@ -68,6 +70,7 @@ public class EventMapper {
                 .paid(event.getPaid())
                 .title(event.getTitle())
                 .views(views)
+                .commenting(event.getCommenting())
                 .build();
     }
 }
