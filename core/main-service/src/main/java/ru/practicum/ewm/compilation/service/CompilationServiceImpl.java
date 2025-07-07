@@ -88,7 +88,7 @@ public class CompilationServiceImpl implements CompilationService {
             allCompilations = compilationRepository.findAllByPinned(pageRequest, pinned);
         }
         Map<Long, EventShortDto> allEventDto = mapToEventShort(allCompilations.stream()
-                .flatMap(compilation -> compilation.getEvents().stream()).toList())
+                .flatMap(compilation -> compilation.getEvents().stream()).distinct().toList())
                 .stream().collect(Collectors.toMap(EventShortDto::getId, Function.identity()));
         List<CompilationDto> compilationDtoList = new ArrayList<>();
         for (Compilation compilation : allCompilations) {
@@ -121,8 +121,8 @@ public class CompilationServiceImpl implements CompilationService {
         }
         LocalDateTime minTime = events.stream().map(Event::getCreatedOn).min(Comparator.comparing(Function.identity())).get();
         List<String> urisList = events.stream().map(event -> "/events/" + event.getId()).toList();
-        String uris = String.join(", ", urisList);
-        List<StatsDto> statsList = statClient.getStats(minTime.minusSeconds(1), LocalDateTime.now(), uris, false);
+
+        List<StatsDto> statsList = statClient.getStats(minTime.minusSeconds(1), LocalDateTime.now(), urisList, false);
         return events.stream().map(event -> {
                     Optional<StatsDto> result = statsList.stream()
                             .filter(statsDto -> statsDto.getUri().equals("/events/" + event.getId()))
