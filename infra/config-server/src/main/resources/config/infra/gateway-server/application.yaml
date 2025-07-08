@@ -64,7 +64,7 @@ spring:
           predicates:
             - Path=/users/{userId}/requests/**
 
-        - id: user
-          uri: lb://main-service
+        - id: user_service_route
+          uri: lb://user-service
           predicates:
             - Path=/admin/users/**

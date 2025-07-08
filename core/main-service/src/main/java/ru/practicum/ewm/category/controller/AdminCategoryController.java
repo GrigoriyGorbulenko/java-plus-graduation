@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.category.dto.CategoryDto;
 import ru.practicum.ewm.category.dto.NewCategoryDto;
 import ru.practicum.ewm.category.service.CategoryService;
-import ru.practicum.ewm.exception.DuplicateException;
+import ru.practicum.exception.DuplicateException;
+
 
 @RestController
 @RequiredArgsConstructor

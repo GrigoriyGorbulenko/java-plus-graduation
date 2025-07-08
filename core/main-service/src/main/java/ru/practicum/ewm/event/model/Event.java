@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import ru.practicum.ewm.category.model.Category;
 import ru.practicum.ewm.event.enums.State;
-import ru.practicum.ewm.user.model.User;
 
 import java.time.LocalDateTime;
 
@@ -44,9 +43,8 @@ public class Event {
     @Column(name = "event_date")
     LocalDateTime eventDate;
 
-    @ManyToOne
     @JoinColumn(name = "initiator_id")
-    User initiator;
+    Long initiatorId;
     Float lat;
     Float lon;
     Boolean paid;

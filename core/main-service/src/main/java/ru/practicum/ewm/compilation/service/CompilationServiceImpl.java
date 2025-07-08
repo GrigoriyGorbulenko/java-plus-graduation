@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.dto.user.UserDto;
 import ru.practicum.ewm.compilation.dto.CompilationDto;
 import ru.practicum.ewm.compilation.dto.NewCompilationDto;
 import ru.practicum.ewm.compilation.dto.UpdateCompilationRequest;
@@ -14,9 +15,11 @@ import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.mapper.EventMapper;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.repository.EventRepository;
-import ru.practicum.ewm.exception.NotFoundException;
+
 import ru.practicum.ewm.stats.client.StatClient;
 import ru.practicum.ewm.stats.dto.StatsDto;
+import ru.practicum.exception.NotFoundException;
+import ru.practicum.feing.UserClient;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -30,6 +33,7 @@ public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final EventRepository eventRepository;
     private final StatClient statClient;
+    private final UserClient userClient;
 
     @Override
     @Transactional
@@ -122,15 +126,27 @@ public class CompilationServiceImpl implements CompilationService {
         LocalDateTime minTime = events.stream().map(Event::getCreatedOn).min(Comparator.comparing(Function.identity())).get();
         List<String> urisList = events.stream().map(event -> "/events/" + event.getId()).toList();
 
+        List<Long> userIds = events.stream()
+                .map(Event::getInitiatorId)
+                .distinct()
+                .toList();
+        Map<Long, UserDto> usersMap = userClient
+                .getAllUsers(userIds, 0, userIds.size()).stream()
+                .collect(Collectors.toMap(UserDto::getId, Function.identity()));
+
         List<StatsDto> statsList = statClient.getStats(minTime.minusSeconds(1), LocalDateTime.now(), urisList, false);
+
         return events.stream().map(event -> {
                     Optional<StatsDto> result = statsList.stream()
                             .filter(statsDto -> statsDto.getUri().equals("/events/" + event.getId()))
                             .findFirst();
                     if (result.isPresent()) {
-                        return EventMapper.mapToShortDto(event, result.get().getHits());
+                        return EventMapper.mapToShortDto(event, result.get().getHits(),
+                                usersMap.getOrDefault(event.getInitiatorId(),
+                                        UserDto.builder().id(0L).name("Unknown").build()));
                     } else {
-                        return EventMapper.mapToShortDto(event, 0L);
+                        return EventMapper.mapToShortDto(event, 0L, usersMap.getOrDefault(event.getInitiatorId(),
+                                UserDto.builder().id(0L).name("Unknown").build()));
                     }
                 })
                 .collect(Collectors.toList());

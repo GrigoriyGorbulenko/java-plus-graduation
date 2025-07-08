@@ -11,9 +11,8 @@ import ru.practicum.ewm.category.mapper.CategoryMapper;
 import ru.practicum.ewm.category.model.Category;
 import ru.practicum.ewm.category.repository.CategoryRepository;
 import ru.practicum.ewm.event.repository.EventRepository;
-import ru.practicum.ewm.exception.ConflictDataException;
-import ru.practicum.ewm.exception.DuplicateException;
-import ru.practicum.ewm.exception.NotFoundException;
+import ru.practicum.exception.*;
+
 
 import java.util.List;
 

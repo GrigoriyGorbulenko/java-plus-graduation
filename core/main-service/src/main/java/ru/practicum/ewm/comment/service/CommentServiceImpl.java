@@ -6,34 +6,37 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.dto.user.UserDto;
+import ru.practicum.dto.user.UserDtoForAdmin;
 import ru.practicum.ewm.comment.dto.CommentDto;
 import ru.practicum.ewm.comment.dto.NewCommentDto;
 import ru.practicum.ewm.comment.enums.SortType;
 import ru.practicum.ewm.comment.mapper.CommentMapper;
+import ru.practicum.ewm.comment.model.BanComment;
 import ru.practicum.ewm.comment.model.Comment;
+import ru.practicum.ewm.comment.repository.BanCommentRepository;
 import ru.practicum.ewm.comment.repository.CommentRepository;
 import ru.practicum.ewm.event.enums.State;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.repository.EventRepository;
-import ru.practicum.ewm.exception.NotFoundException;
-import ru.practicum.ewm.exception.ValidationException;
-import ru.practicum.ewm.user.dto.UserDtoForAdmin;
-import ru.practicum.ewm.user.mapper.UserMapper;
-import ru.practicum.ewm.user.model.User;
-import ru.practicum.ewm.user.repository.UserRepository;
+import ru.practicum.exception.NotFoundException;
+import ru.practicum.exception.ValidationException;
+import ru.practicum.feing.UserClient;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Slf4j
 public class CommentServiceImpl implements CommentService {
-
+    private final BanCommentRepository banRepository;
     private final CommentRepository commentRepository;
-    private final UserRepository userRepository;
+    private final UserClient userClient;
     private final EventRepository eventRepository;
 
     @Transactional
@@ -44,24 +47,29 @@ public class CommentServiceImpl implements CommentService {
         if (event.getState() != State.PUBLISHED) {
             throw new ValidationException("Нельзя комментировать не опубликованное событие");
         }
-        User user = checkUser(userId);
-        if (user.getForbiddenCommentEvents().contains(event)) {
+        UserDto user = checkUser(userId);
+        if (!userClient.checkExistsById(userId)) {
+            throw new NotFoundException("Пользователь не найден");
+        }
+        if (banRepository.existsByEventIdAndUserId(eventId, userId)) {
             throw new ValidationException("Для данного пользователя стоит запрет на комментирование данного события");
         }
         if (!event.getCommenting()) {
             throw new ValidationException("Данное событие нельзя комментировать");
         }
-        Comment comment = CommentMapper.toComment(newCommentDto, event, user);
-        return CommentMapper.toCommentDto(commentRepository.save(comment));
+        Comment comment = CommentMapper.toComment(newCommentDto, event, userId);
+        return CommentMapper.toCommentDto(commentRepository.save(comment), event.getAnnotation(), user.getName());
     }
 
     @Transactional
     @Override
     public CommentDto updateComment(Long userId, Long eventId, Long commentId, NewCommentDto newCommentDto) {
         checkEventId(eventId);
-        if (!userRepository.existsById(userId)) {
+        UserDto user = checkUser(userId);
+        if (!userClient.checkExistsById(userId)) {
             throw new NotFoundException("Пользователь не найден");
         }
+        Event event = checkEvent(eventId);
         if (!eventRepository.existsById(eventId)) {
             throw new NotFoundException("Событие не найдено");
         }
@@ -69,19 +77,19 @@ public class CommentServiceImpl implements CommentService {
         if (!Objects.equals(comment.getEvent().getId(), eventId)) {
             throw new ValidationException("Некорректно указан eventId");
         }
-        if (comment.getAuthor().getId().equals(userId)) {
+        if (comment.getAuthorId().equals(userId)) {
             comment.setText(newCommentDto.getText());
         } else {
             throw new ValidationException("Пользователь не оставлял комментарий с указанным Id " + commentId);
         }
-        return CommentMapper.toCommentDto(comment);
+        return CommentMapper.toCommentDto(comment, event.getAnnotation(), user.getName());
     }
 
     @Transactional
     @Override
     public void deleteComment(Long userId, Long eventId, Long commentId) {
         checkEventId(eventId);
-        if (!userRepository.existsById(userId)) {
+        if (!userClient.checkExistsById(userId)) {
             throw new NotFoundException("Пользователь не найден");
         }
         if (!eventRepository.existsById(eventId)) {
@@ -91,7 +99,7 @@ public class CommentServiceImpl implements CommentService {
         if (!Objects.equals(comment.getEvent().getId(), eventId)) {
             throw new ValidationException("Некорректно указан eventId");
         }
-        if (comment.getAuthor().getId().equals(userId)) {
+        if (comment.getAuthorId().equals(userId)) {
             commentRepository.deleteById(commentId);
         } else {
             throw new ValidationException("Пользователь не оставлял комментарий с указанным Id " + commentId);
@@ -112,37 +120,50 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public List<CommentDto> getAllComments(Long eventId, SortType sortType, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size);
-        List<CommentDto> comments = commentRepository.findAllByEvent_Id(eventId, pageable)
-                .stream()
-                .map(CommentMapper::toCommentDto)
+        String eventName = checkEvent(eventId).getAnnotation();
+        List<Comment> comments = commentRepository.findAllByEventId(eventId, pageable);
+        List<Long> userIds = comments.stream()
+                .map(Comment::getAuthorId)
+                .distinct()
                 .toList();
+        Map<Long, String> userNames = userClient.getAllUsers(userIds, 0, userIds.size()).stream()
+                .collect(Collectors.toMap(UserDto::getId, UserDto::getName));
+
+        List<CommentDto> commentsResult = comments.stream()
+                .map(comment -> CommentMapper
+                        .toCommentDto(comment, eventName, userNames.get(comment.getAuthorId())))
+                .toList();
+
         if (sortType == SortType.LIKES) {
-            return comments.stream().sorted(Comparator.comparing(CommentDto::getLikes).reversed()).toList();
+            return commentsResult.stream().sorted(Comparator.comparing(CommentDto::getLikes).reversed()).toList();
         } else {
-            return comments.stream().sorted(Comparator.comparing(CommentDto::getCreated).reversed()).toList();
+            return commentsResult.stream().sorted(Comparator.comparing(CommentDto::getCreated).reversed()).toList();
         }
     }
 
     @Transactional
     @Override
     public CommentDto addLike(Long userId, Long commentId) {
-        if (!userRepository.existsById(userId)) {
+        if (!userClient.checkExistsById(userId)) {
             throw new NotFoundException("Пользователь не найден");
         }
         Comment comment = checkComment(commentId);
-        if (comment.getAuthor().getId().equals(userId)) {
+        if (comment.getAuthorId().equals(userId)) {
             throw new ValidationException("Пользователь не может лайкать свой комментарий");
         }
         if (!comment.getLikes().add(userId)) {
             throw new ValidationException("Нельзя поставить лайк второй раз");
         }
-        return CommentMapper.toCommentDto(comment);
+        UserDto user = checkUser(comment.getAuthorId());
+        Event event = checkEvent(comment.getEvent().getId());
+
+        return CommentMapper.toCommentDto(comment, event.getAnnotation(), user.getName());
     }
 
     @Transactional
     @Override
     public void deleteLike(Long userId, Long commentId) {
-        if (!userRepository.existsById(userId)) {
+        if (!userClient.checkExistsById(userId)) {
             throw new NotFoundException("Пользователь не найден");
         }
         Comment comment = checkComment(commentId);
@@ -154,7 +175,9 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentDto getComment(Long id) {
         Comment comment = checkComment(id);
-        return CommentMapper.toCommentDto(comment);
+        UserDto user = checkUser(comment.getAuthorId());
+        Event event = checkEvent(comment.getEvent().getId());
+        return CommentMapper.toCommentDto(comment, event.getAnnotation(), user.getName());
     }
 
 
@@ -162,29 +185,42 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public UserDtoForAdmin addBanCommited(Long userId, Long eventId) {
         checkEventId(eventId);
-        User user = checkUser(userId);
+        UserDto user = checkUser(userId);
         Event forbidEvent = checkEvent(eventId);
-        if (user.getForbiddenCommentEvents().stream().anyMatch(event -> event.getId().equals(eventId))) {
+        if (banRepository.existsByEventIdAndUserId(eventId, userId)) {
             throw new ValidationException("Уже добавлен такой запрет на комментирование");
         }
-        user.getForbiddenCommentEvents().add(forbidEvent);
-        return UserMapper.toUserDtoForAdmin(user);
+        banRepository.save(BanComment.builder()
+                .userId(userId)
+                .eventId(eventId)
+                .build());
+        return UserDtoForAdmin.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .forbiddenCommentEvents(banRepository.findAllByUserId(userId).stream()
+                        .map(BanComment::getEventId)
+                        .collect(Collectors.toSet()))
+                .build();
     }
 
     @Transactional
     @Override
     public void deleteBanCommited(Long userId, Long eventId) {
         checkEventId(eventId);
-        User user = checkUser(userId);
+        if (!userClient.checkExistsById(userId)) {
+            throw new NotFoundException("Пользователь не найден");
+        }
+        UserDto user = checkUser(userId);
         Event forbidEvent = checkEvent(eventId);
-        if (!user.getForbiddenCommentEvents().remove(forbidEvent)) {
+        if (!banRepository.existsByEventIdAndUserId(eventId, userId)) {
             throw new NotFoundException("Такого запрета на комментирование не найдено");
         }
+        banRepository.deleteByEventIdAndUserId(eventId, userId);
     }
 
-    private User checkUser(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+    private UserDto checkUser(Long userId) {
+        return userClient.findById(userId);
     }
 
     private Event checkEvent(Long eventId) {

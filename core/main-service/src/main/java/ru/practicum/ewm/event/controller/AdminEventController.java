@@ -13,7 +13,8 @@ import ru.practicum.ewm.event.dto.EventFullDto;
 import ru.practicum.ewm.event.dto.UpdateEventAdminRequest;
 import ru.practicum.ewm.event.enums.State;
 import ru.practicum.ewm.event.service.EventService;
-import ru.practicum.ewm.exception.InvalidDateTimeException;
+import ru.practicum.exception.InvalidDateTimeException;
+
 
 import java.time.LocalDateTime;
 import java.util.List;

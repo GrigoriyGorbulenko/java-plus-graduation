@@ -7,17 +7,15 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.event.enums.State;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.repository.EventRepository;
-import ru.practicum.ewm.exception.ConflictDataException;
-import ru.practicum.ewm.exception.DuplicateException;
-import ru.practicum.ewm.exception.NotFoundException;
-import ru.practicum.ewm.exception.ValidationException;
 import ru.practicum.ewm.partrequest.dto.ParticipationRequestDto;
 import ru.practicum.ewm.partrequest.enums.Status;
 import ru.practicum.ewm.partrequest.mapper.ParticipationRequestMapper;
 import ru.practicum.ewm.partrequest.model.ParticipationRequest;
 import ru.practicum.ewm.partrequest.repository.ParticipationRequestRepository;
-import ru.practicum.ewm.user.model.User;
-import ru.practicum.ewm.user.repository.UserRepository;
+import ru.practicum.exception.*;
+
+import ru.practicum.feing.UserClient;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,7 +28,7 @@ import java.util.Map;
 @Transactional(readOnly = true)
 public class ParticipationRequestServiceImpl implements ParticipationRequestService {
     private final ParticipationRequestRepository requestRepository;
-    private final UserRepository userRepository;
+    private final UserClient userClient;
     private final EventRepository eventRepository;
 
     @Transactional
@@ -39,15 +37,15 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         if (eventId == 0) {
             throw new ValidationException("Не задано id события");
         }
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь c id: " + userId + " не найден"));
+        if (!userClient.checkExistsById(userId)) {
+            throw new NotFoundException("Пользователь c id: " + userId + " не найден");
+        }
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие c id: " + eventId + " не найдено"));
-        if (requestRepository.existsByRequesterAndEvent(user, event)) {
+        if (requestRepository.existsByRequesterAndEvent(userId, event)) {
             throw new DuplicateException("Такой запрос уже существует");
         }
-        if (event.getInitiator().getId().equals(user.getId())) {
+        if (event.getInitiatorId().equals(userId)) {
             throw new ConflictDataException("Пользователь не может создать запрос на участие в своем же событии");
         }
         if (!event.getState().equals(State.PUBLISHED)) {
@@ -65,7 +63,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         } else
             status = Status.PENDING;
         ParticipationRequest participationRequest = ParticipationRequest.builder()
-                .requester(user)
+                .requesterId(userId)
                 .event(event)
                 .status(status)
                 .build();
@@ -114,7 +112,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     }
 
     private void checkExistsUserById(Long userId) {
-        if (!userRepository.existsById(userId)) {
+        if (!userClient.checkExistsById(userId)) {
             throw new NotFoundException("Пользователь c id: " + userId + " не найден");
         }
     }
