@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.dto.stats.StatsDto;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.ewm.compilation.dto.CompilationDto;
 import ru.practicum.ewm.compilation.dto.NewCompilationDto;
@@ -16,10 +17,10 @@ import ru.practicum.ewm.event.mapper.EventMapper;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.repository.EventRepository;
 
-import ru.practicum.ewm.stats.client.StatClient;
-import ru.practicum.ewm.stats.dto.StatsDto;
+
 import ru.practicum.exception.NotFoundException;
-import ru.practicum.feing.UserClient;
+import ru.practicum.feign.StatClient;
+import ru.practicum.feign.UserClient;
 
 import java.time.LocalDateTime;
 import java.util.*;

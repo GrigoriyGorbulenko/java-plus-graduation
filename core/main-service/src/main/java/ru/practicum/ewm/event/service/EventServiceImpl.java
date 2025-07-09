@@ -10,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.dto.stats.EndpointHitDto;
+import ru.practicum.dto.stats.StatsDto;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.ewm.category.model.Category;
 import ru.practicum.ewm.category.repository.CategoryRepository;
@@ -26,11 +28,11 @@ import ru.practicum.ewm.partrequest.mapper.ParticipationRequestMapper;
 import ru.practicum.ewm.partrequest.model.ParticipationRequest;
 import ru.practicum.ewm.partrequest.repository.ParticipationRequestRepository;
 import ru.practicum.ewm.partrequest.service.ParticipationRequestService;
-import ru.practicum.ewm.stats.client.StatClient;
-import ru.practicum.ewm.stats.dto.EndpointHitDto;
-import ru.practicum.ewm.stats.dto.StatsDto;
+import ru.practicum.feign.StatClient;
+import ru.practicum.feign.UserClient;
+
 import ru.practicum.exception.*;
-import ru.practicum.feing.UserClient;
+
 
 import java.time.LocalDateTime;
 import java.util.*;

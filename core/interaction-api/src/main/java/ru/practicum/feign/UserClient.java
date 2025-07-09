@@ -1,10 +1,9 @@
-package ru.practicum.feing;
+package ru.practicum.feign;
 
 import feign.FeignException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
-
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.user.NewUserRequest;
@@ -12,6 +11,7 @@ import ru.practicum.dto.user.UserDto;
 
 import java.util.ArrayList;
 import java.util.List;
+
 
 @FeignClient(name = "user-service", path = "/admin/users")
 public interface UserClient {

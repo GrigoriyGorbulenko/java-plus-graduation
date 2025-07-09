@@ -1,4 +1,4 @@
-package ru.practicum.ewm.stats.exceptions;
+package ru.practicum.exception;
 
 import org.springframework.http.HttpStatusCode;
 

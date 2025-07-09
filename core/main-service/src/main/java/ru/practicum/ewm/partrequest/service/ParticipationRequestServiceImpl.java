@@ -13,8 +13,7 @@ import ru.practicum.ewm.partrequest.mapper.ParticipationRequestMapper;
 import ru.practicum.ewm.partrequest.model.ParticipationRequest;
 import ru.practicum.ewm.partrequest.repository.ParticipationRequestRepository;
 import ru.practicum.exception.*;
-
-import ru.practicum.feing.UserClient;
+import ru.practicum.feign.UserClient;
 
 
 import java.util.ArrayList;
@@ -42,7 +41,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         }
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие c id: " + eventId + " не найдено"));
-        if (requestRepository.existsByRequesterAndEvent(userId, event)) {
+        if (requestRepository.existsByRequesterIdAndEvent(userId, event)) {
             throw new DuplicateException("Такой запрос уже существует");
         }
         if (event.getInitiatorId().equals(userId)) {

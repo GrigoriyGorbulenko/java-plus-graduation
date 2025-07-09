@@ -1,4 +1,5 @@
-package ru.practicum.ewm.stats.client;
+package ru.practicum.feign;
+
 
 import feign.FeignException;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -7,11 +8,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-import ru.practicum.ewm.stats.dto.EndpointHitDto;
-import ru.practicum.ewm.stats.dto.StatsDto;
+import ru.practicum.dto.stats.EndpointHitDto;
+import ru.practicum.dto.stats.StatsDto;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
+
 
 @FeignClient(name = "stats-server")
 public interface StatClient {
