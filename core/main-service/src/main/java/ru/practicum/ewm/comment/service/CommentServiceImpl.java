@@ -2,13 +2,13 @@ package ru.practicum.ewm.comment.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.dto.user.UserDtoForAdmin;
+import ru.practicum.enums.event.State;
 import ru.practicum.ewm.comment.dto.CommentDto;
 import ru.practicum.ewm.comment.dto.NewCommentDto;
 import ru.practicum.ewm.comment.enums.SortType;
@@ -17,7 +17,7 @@ import ru.practicum.ewm.comment.model.BanComment;
 import ru.practicum.ewm.comment.model.Comment;
 import ru.practicum.ewm.comment.repository.BanCommentRepository;
 import ru.practicum.ewm.comment.repository.CommentRepository;
-import ru.practicum.ewm.event.enums.State;
+
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.repository.EventRepository;
 import ru.practicum.exception.NotFoundException;
@@ -38,7 +38,6 @@ import java.util.stream.Collectors;
 public class CommentServiceImpl implements CommentService {
     private final BanCommentRepository banRepository;
     private final CommentRepository commentRepository;
-    @Autowired
     private final UserClient userClient;
     private final EventRepository eventRepository;
 

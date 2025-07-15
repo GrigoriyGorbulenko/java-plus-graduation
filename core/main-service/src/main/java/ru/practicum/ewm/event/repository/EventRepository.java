@@ -14,4 +14,6 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
     Boolean existsByCategoryId(Long catId);
 
     List<Event> findAllByIdIn(List<Long> eventIds);
+
+    void deleteByInitiatorId(Long initiatorId);
 }

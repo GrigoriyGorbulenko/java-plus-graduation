@@ -1,16 +1,17 @@
 package ru.practicum.ewm.event.mapper;
 
 import lombok.experimental.UtilityClass;
+import ru.practicum.dto.event.Location;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.dto.user.UserShortDto;
+import ru.practicum.enums.event.State;
 import ru.practicum.ewm.category.mapper.CategoryMapper;
 import ru.practicum.ewm.category.model.Category;
-import ru.practicum.ewm.event.dto.EventFullDto;
-import ru.practicum.ewm.event.dto.EventShortDto;
-import ru.practicum.ewm.event.dto.NewEventDto;
+import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.EventShortDto;
+import ru.practicum.dto.event.NewEventDto;
 import ru.practicum.ewm.event.model.Event;
-import ru.practicum.ewm.event.model.Location;
-import ru.practicum.ewm.event.enums.State;
+
 
 
 import java.time.LocalDateTime;

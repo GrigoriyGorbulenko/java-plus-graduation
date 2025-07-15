@@ -1,6 +1,7 @@
 package ru.practicum.ewm.event.service;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
+import feign.FeignException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,28 +11,28 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.dto.event.*;
+import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.dto.stats.EndpointHitDto;
 import ru.practicum.dto.stats.StatsDto;
 import ru.practicum.dto.user.UserDto;
+import ru.practicum.enums.event.State;
+import ru.practicum.enums.event.StateAction;
+import ru.practicum.enums.request.Status;
 import ru.practicum.ewm.category.model.Category;
 import ru.practicum.ewm.category.repository.CategoryRepository;
-import ru.practicum.ewm.event.dto.*;
-import ru.practicum.ewm.event.enums.State;
-import ru.practicum.ewm.event.enums.StateAction;
+
 import ru.practicum.ewm.event.mapper.EventMapper;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.QEvent;
 import ru.practicum.ewm.event.repository.EventRepository;
-import ru.practicum.ewm.partrequest.dto.ParticipationRequestDto;
-import ru.practicum.ewm.partrequest.enums.Status;
-import ru.practicum.ewm.partrequest.mapper.ParticipationRequestMapper;
-import ru.practicum.ewm.partrequest.model.ParticipationRequest;
-import ru.practicum.ewm.partrequest.repository.ParticipationRequestRepository;
-import ru.practicum.ewm.partrequest.service.ParticipationRequestService;
+
+import ru.practicum.feign.ParticipationRequestClient;
 import ru.practicum.feign.StatClient;
 import ru.practicum.feign.UserClient;
 
 import ru.practicum.exception.*;
+
 
 
 import java.time.LocalDateTime;
@@ -51,9 +52,7 @@ public class EventServiceImpl implements EventService {
 
     private final UserClient userClient;
 
-    private final ParticipationRequestRepository requestRepository;
-
-    private final ParticipationRequestService requestService;
+    private final ParticipationRequestClient requestClient;
 
     private final StatClient statClient;
 
@@ -64,10 +63,15 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public EventFullDto addEvent(NewEventDto eventDto, Long userId) {
         checkFields(eventDto);
+
         Category category = categoryRepository.findById(eventDto.getCategory())
                 .orElseThrow(() -> new NotFoundException("Категория не найдена"));
 
         UserDto user = userClient.findById(userId);
+
+        if (user.getName().equals("UNKNOWN")) {
+            throw new ServerUnavailable("User Server unavailable");
+        }
 
         if (eventDto.getCommenting() == null) {
             eventDto.setCommenting(true);
@@ -89,6 +93,7 @@ public class EventServiceImpl implements EventService {
                 .map(event -> "/events/" + event.getId())
                 .toList();
 
+
         List<StatsDto> statsList = statClient.getStats(events.getFirst().getCreatedOn().minusSeconds(1),
                 LocalDateTime.now(), urisList, false);
 
@@ -108,13 +113,14 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventFullDto getEventOfUser(Long userId, Long eventId) {
         UserDto user = userClient.findById(userId);
+
         Event event = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException("Событие не найдено"));
         if (!Objects.equals(event.getInitiatorId(), userId)) {
             throw new ValidationException("Можно просмотреть только своё событие");
         }
         String uri = "/events/" + eventId;
-        List<StatsDto> statsList = statClient.getStats(event.getCreatedOn().minusSeconds(1), LocalDateTime.now(), List.of(uri),
-                false);
+        List<StatsDto> statsList = statClient.getStats(event.getCreatedOn().minusSeconds(1), LocalDateTime.now(),
+                List.of(uri), false);
         Optional<StatsDto> result = statsList.stream().findFirst();
         if (result.isPresent()) {
             return EventMapper.mapToFullDto(event, result.get().getHits(), user);
@@ -222,22 +228,24 @@ public class EventServiceImpl implements EventService {
                 .stream()
                 .map(event -> "/events/" + event.getId())
                 .toList();
+
         List<Long> userIds = events.stream()
                 .map(Event::getInitiatorId)
                 .distinct()
                 .toList();
         Map<Long, UserDto> users = userClient.getAllUsers(userIds, 0, userIds.size()).stream()
                 .collect(Collectors.toMap(UserDto::getId, Function.identity()));
-
         List<StatsDto> statsList = statClient.getStats(events.getFirst().getCreatedOn().minusSeconds(1),
                 LocalDateTime.now(), urisList, false);
+
 
         List<EventShortDto> result = events.stream().map(event -> {
 
                     Optional<StatsDto> stat = statsList.stream()
                             .filter(statsDto -> statsDto.getUri().equals("/events/" + event.getId()))
                             .findFirst();
-                    return EventMapper.mapToShortDto(event, stat.isPresent() ? stat.get().getHits() : 0L, users.get(event.getInitiatorId()));
+                    return EventMapper.mapToShortDto(event, stat.isPresent() ? stat.get().getHits() : 0L,
+                            users.get(event.getInitiatorId()));
                 })
                 .toList();
         List<EventShortDto> resultList = new ArrayList<>(result);
@@ -248,7 +256,7 @@ public class EventServiceImpl implements EventService {
         }
 
         var ids = resultList.stream().map(EventShortDto::getId).toList();
-        Map<Long, List<ParticipationRequest>> confirmedRequests = requestService.prepareConfirmedRequests(ids);
+        Map<Long, List<ParticipationRequestDto>> confirmedRequests = requestClient.prepareConfirmedRequests(ids);
 
         resultList.forEach(r -> {
             var requests = confirmedRequests.get(r.getId());
@@ -265,7 +273,7 @@ public class EventServiceImpl implements EventService {
                     .build();
             statClient.saveHit(requestBody);
             log.info("Сохранение статистики.");
-        } catch (SaveStatsException e) {
+        } catch (FeignException e) {
             log.error("Не удалось сохранить статистику.");
         }
 
@@ -289,7 +297,7 @@ public class EventServiceImpl implements EventService {
 
         EventFullDto result = EventMapper.mapToFullDto(event, stat.isPresent() ? stat.get().getHits() : 0L, user);
 
-        List<ParticipationRequest> confirmedRequests = requestService
+        List<ParticipationRequestDto> confirmedRequests = requestClient
                 .prepareConfirmedRequests(List.of(event.getId())).get(event.getId());
         result.setConfirmedRequests(confirmedRequests != null ? confirmedRequests.size() : 0);
 
@@ -303,7 +311,7 @@ public class EventServiceImpl implements EventService {
 
             statClient.saveHit(requestBody);
             log.info("Сохранение статистики.");
-        } catch (SaveStatsException e) {
+        } catch (FeignException e) {
             log.error("Не удалось сохранить статистику.");
         }
 
@@ -337,6 +345,7 @@ public class EventServiceImpl implements EventService {
                 .stream()
                 .map(event -> "/events/" + event.getId())
                 .toList();
+
         List<Long> userIds = events.stream()
                 .map(Event::getInitiatorId)
                 .distinct()
@@ -347,7 +356,7 @@ public class EventServiceImpl implements EventService {
         List<StatsDto> statsList = statClient.getStats(events.getFirst().getCreatedOn().minusSeconds(1),
                 LocalDateTime.now(), urisList, false);
         var ids = events.stream().map(Event::getId).toList();
-        Map<Long, List<ParticipationRequest>> confirmedRequests = requestService.prepareConfirmedRequests(ids);
+        Map<Long, List<ParticipationRequestDto>> confirmedRequests = requestClient.prepareConfirmedRequests(ids);
 
         return events.stream().map(event -> {
 
@@ -362,7 +371,6 @@ public class EventServiceImpl implements EventService {
                     return r;
                 })
                 .toList();
-
     }
 
     // admin Редактирование данных любого события администратором. Валидация данных не требуется
@@ -429,11 +437,12 @@ public class EventServiceImpl implements EventService {
 
         EventFullDto result = EventMapper.mapToFullDto(event, stat.isPresent() ? stat.get().getHits() : 0L, user);
 
-        List<ParticipationRequest> confirmedRequests = requestService
+        List<ParticipationRequestDto> confirmedRequests = requestClient
                 .prepareConfirmedRequests(List.of(event.getId())).get(event.getId());
         result.setConfirmedRequests(confirmedRequests != null ? confirmedRequests.size() : 0);
 
         return result;
+
     }
 
     @Override
@@ -446,8 +455,7 @@ public class EventServiceImpl implements EventService {
             log.error("userId отличается от id создателя события");
             throw new ValidationException("Событие должно быть создано текущим пользователем");
         }
-        return ParticipationRequestMapper
-                .toParticipationRequestDto(requestRepository.findAllByEventInitiatorIdAndEventId(userId, eventId));
+        return requestClient.findAllByEventId(eventId);
     }
 
     @Override
@@ -466,12 +474,13 @@ public class EventServiceImpl implements EventService {
         }
         List<Long> requestIds = updateRequest.getRequestIds();
         log.info("Получили список id запросов на участие: {}", requestIds);
-        List<ParticipationRequest> requestList = requestRepository.findAllById(requestIds);
-        if (requestList.stream().anyMatch(request -> !Objects.equals(request.getEvent().getId(), eventId))) {
+        List<ParticipationRequestDto> requestList = requestClient.findAllById(requestIds);
+        if (requestList.stream()
+                .anyMatch(request -> !Objects.equals(request.getEvent(), eventId))) {
             throw new ValidationException("Все запросы должны принадлежать одному событию");
         }
-        List<ParticipationRequest> confirmedRequestsList = new ArrayList<>();
-        List<ParticipationRequest> rejectedRequests = new ArrayList<>();
+        List<ParticipationRequestDto> confirmedRequestsList = new ArrayList<>();
+        List<ParticipationRequestDto> rejectedRequests = new ArrayList<>();
         if (event.getRequestModeration() && event.getParticipantLimit() != 0) {
             switch (updateRequest.getStatus()) {
                 case CONFIRMED -> requestList.forEach(request -> {
@@ -480,9 +489,11 @@ public class EventServiceImpl implements EventService {
                     }
                     if (Objects.equals(event.getConfirmedRequests(), event.getParticipantLimit())) {
                         request.setStatus(Status.REJECTED);
+                        requestClient.updateRequestStatus(request.getId(), String.valueOf(Status.REJECTED));
                         rejectedRequests.add(request);
                     } else {
                         request.setStatus(Status.CONFIRMED);
+                        requestClient.updateRequestStatus(request.getId(), String.valueOf(Status.CONFIRMED));
                         Integer confirmedRequests = event.getConfirmedRequests();
                         event.setConfirmedRequests(++confirmedRequests);
                         confirmedRequestsList.add(request);
@@ -493,15 +504,22 @@ public class EventServiceImpl implements EventService {
                         throw new ConflictDataException("Можно изменить только статус PENDING");
                     }
                     request.setStatus(Status.REJECTED);
+                    requestClient.updateRequestStatus(request.getId(), String.valueOf(Status.REJECTED));
                     rejectedRequests.add(request);
                 });
             }
         }
 
-        return new EventRequestStatusUpdateResult(confirmedRequestsList.stream()
-                .map(ParticipationRequestMapper::toParticipationRequestDto)
-                .toList(), rejectedRequests.stream().map(ParticipationRequestMapper::toParticipationRequestDto)
-                .toList());
+        return new EventRequestStatusUpdateResult(confirmedRequestsList, rejectedRequests);
+    }
+
+    @Override
+    public EventFullDto findEventById(Long eventId) {
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException("Событие не найдено"));
+
+        UserDto user = userClient.findById(event.getInitiatorId());
+
+        return EventMapper.mapToFullDto(event, 0L, user);
     }
 
     private void checkFields(NewEventDto dto) {
@@ -542,4 +560,5 @@ public class EventServiceImpl implements EventService {
             }
         }
     }
+
 }

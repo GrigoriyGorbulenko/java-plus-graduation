@@ -1,8 +1,9 @@
 package ru.practicum.ewm.event.service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import ru.practicum.ewm.event.dto.*;
-import ru.practicum.ewm.partrequest.dto.ParticipationRequestDto;
+import ru.practicum.dto.event.*;
+import ru.practicum.dto.request.ParticipationRequestDto;
+
 
 import java.util.List;
 
@@ -26,5 +27,7 @@ public interface EventService {
     List<ParticipationRequestDto> getRequestsOfUserEvent(Long userId, Long eventId);
 
     EventRequestStatusUpdateResult updateRequestsStatus(EventRequestStatusUpdateRequest updateRequest, Long userId,
-                                                       Long eventId);
+                                                        Long eventId);
+
+    EventFullDto findEventById(Long eventId);
 }

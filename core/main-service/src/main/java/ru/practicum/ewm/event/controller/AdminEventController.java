@@ -7,11 +7,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.UpdateObject;
-import ru.practicum.ewm.event.dto.EventAdminFilter;
-import ru.practicum.ewm.event.dto.EventFullDto;
-import ru.practicum.ewm.event.dto.UpdateEventAdminRequest;
-import ru.practicum.ewm.event.enums.State;
+import ru.practicum.enums.event.State;
+import ru.practicum.UpdateObject;
+import ru.practicum.dto.event.EventAdminFilter;
+import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.UpdateEventAdminRequest;
+
 import ru.practicum.ewm.event.service.EventService;
 import ru.practicum.exception.InvalidDateTimeException;
 
@@ -19,7 +20,7 @@ import ru.practicum.exception.InvalidDateTimeException;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static ru.practicum.ewm.utils.date.DateTimeFormat.TIME_PATTERN;
+import static ru.practicum.utils.date.DateTimeFormat.TIME_PATTERN;
 
 @Slf4j
 @AllArgsConstructor

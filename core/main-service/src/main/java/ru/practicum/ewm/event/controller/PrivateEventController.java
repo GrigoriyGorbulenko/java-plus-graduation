@@ -5,9 +5,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.event.dto.*;
+import ru.practicum.dto.event.*;
+import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.ewm.event.service.EventService;
-import ru.practicum.ewm.partrequest.dto.ParticipationRequestDto;
+
 
 import java.util.List;
 
@@ -51,8 +52,8 @@ public class PrivateEventController {
 
     @PatchMapping("/{eventId}/requests")
     public EventRequestStatusUpdateResult updateRequestsStatus(@PathVariable Long userId, @PathVariable Long eventId,
-                                                              @Valid @RequestBody
-                                                              EventRequestStatusUpdateRequest updateRequest) {
+                                                               @Valid @RequestBody
+                                                               EventRequestStatusUpdateRequest updateRequest) {
         log.info("Получили запрос на обновление статусов заявок");
         return eventService.updateRequestsStatus(updateRequest, userId, eventId);
     }
