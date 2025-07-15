@@ -44,7 +44,7 @@ public class Event {
     @Column(name = "event_date")
     LocalDateTime eventDate;
 
-    @JoinColumn(name = "initiator_id")
+    @Column(name = "initiator_id")
     Long initiatorId;
     Float lat;
     Float lon;

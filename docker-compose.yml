@@ -45,6 +45,8 @@ services:
       timeout: 5s
       interval: 5s
       retries: 10
+
+
   request-db:
     image: postgres:16.1
     container_name: postgres-request-service-db
@@ -54,6 +56,21 @@ services:
       - POSTGRES_PASSWORD=request
       - POSTGRES_USER=request
       - POSTGRES_DB=request-db
+    healthcheck:
+      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
+      timeout: 5s
+      interval: 5s
+      retries: 10
+
+  comment-db:
+    image: postgres:16.1
+    container_name: postgres-comment-service-db
+    ports:
+      - "6543:5432"
+    environment:
+      - POSTGRES_PASSWORD=comment
+      - POSTGRES_USER=comment
+      - POSTGRES_DB=comment-db
     healthcheck:
       test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
       timeout: 5s

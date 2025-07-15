@@ -1,10 +1,10 @@
-package ru.practicum.ewm.comment.mapper;
+package ru.practicum.mapper;
 
 import lombok.experimental.UtilityClass;
-import ru.practicum.ewm.comment.dto.CommentDto;
-import ru.practicum.ewm.comment.dto.NewCommentDto;
-import ru.practicum.ewm.comment.model.Comment;
-import ru.practicum.ewm.event.model.Event;
+import ru.practicum.dto.comment.CommentDto;
+import ru.practicum.dto.comment.NewCommentDto;
+import ru.practicum.model.Comment;
+
 
 import java.time.LocalDateTime;
 
@@ -15,18 +15,18 @@ public class CommentMapper {
         return CommentDto.builder()
                 .id(comment.getId())
                 .text(comment.getText())
-                .eventId(comment.getEvent().getId())
-                .eventName(comment.getEvent().getAnnotation())
+                .eventId(comment.getEventId())
+                .eventName(eventName)
                 .authorName(authorName)
                 .likes(comment.getLikes().size())
                 .created(comment.getCreated())
                 .build();
     }
 
-    public Comment toComment(NewCommentDto newCommentDto, Event event, Long userId) {
+    public Comment toComment(NewCommentDto newCommentDto, Long eventId, Long userId) {
         return Comment.builder()
                 .text(newCommentDto.getText())
-                .event(event)
+                .eventId(eventId)
                 .authorId(userId)
                 .created(LocalDateTime.now())
                 .build();

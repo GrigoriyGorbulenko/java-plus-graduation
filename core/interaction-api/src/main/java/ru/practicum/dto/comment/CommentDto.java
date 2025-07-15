@@ -1,4 +1,4 @@
-package ru.practicum.ewm.comment.dto;
+package ru.practicum.dto.comment;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;

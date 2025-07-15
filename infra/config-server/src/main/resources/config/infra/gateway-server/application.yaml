@@ -19,21 +19,6 @@ spring:
           predicates:
             - Path=/categories/**
 
-        - id: admin_comment
-          uri: lb://main-service
-          predicates:
-            - Path=/admin/comments/**
-
-        - id: private_comment
-          uri: lb://main-service
-          predicates:
-            - Path=/users/{userId}/comments/**
-
-        - id: public_comment
-          uri: lb://main-service
-          predicates:
-            - Path=/comments/**
-
         - id: admin_compilation
           uri: lb://main-service
           predicates:
@@ -59,9 +44,14 @@ spring:
           predicates:
             - Path=/events/**
 
+        - id: comment_service_route
+          uri: lb://comment-service
+          predicates:
+            - Path=/admin/comments/**,/users/{userId}/comments/**,/comments/**
+
         - id: request_service_route
-        - uri: lb://request-service
-        - predicates:
+          uri: lb://request-service
+          predicates:
             - Path=/users/{userId}/requests/**
 
         - id: user_service_route

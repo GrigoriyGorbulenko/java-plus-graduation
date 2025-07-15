@@ -1,4 +1,4 @@
-package ru.practicum.ewm.comment.service;
+package ru.practicum.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -6,23 +6,22 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.dto.comment.CommentDto;
+import ru.practicum.dto.comment.NewCommentDto;
+import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.dto.user.UserDtoForAdmin;
+import ru.practicum.enums.comment.SortType;
 import ru.practicum.enums.event.State;
-import ru.practicum.ewm.comment.dto.CommentDto;
-import ru.practicum.ewm.comment.dto.NewCommentDto;
-import ru.practicum.ewm.comment.enums.SortType;
-import ru.practicum.ewm.comment.mapper.CommentMapper;
-import ru.practicum.ewm.comment.model.BanComment;
-import ru.practicum.ewm.comment.model.Comment;
-import ru.practicum.ewm.comment.repository.BanCommentRepository;
-import ru.practicum.ewm.comment.repository.CommentRepository;
-
-import ru.practicum.ewm.event.model.Event;
-import ru.practicum.ewm.event.repository.EventRepository;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
+import ru.practicum.feign.EventClient;
 import ru.practicum.feign.UserClient;
+import ru.practicum.mapper.CommentMapper;
+import ru.practicum.model.BanComment;
+import ru.practicum.model.Comment;
+import ru.practicum.repository.BanCommentRepository;
+import ru.practicum.repository.CommentRepository;
 
 
 import java.util.Comparator;
@@ -39,13 +38,13 @@ public class CommentServiceImpl implements CommentService {
     private final BanCommentRepository banRepository;
     private final CommentRepository commentRepository;
     private final UserClient userClient;
-    private final EventRepository eventRepository;
+    private final EventClient eventClient;
 
     @Transactional
     @Override
     public CommentDto createComment(Long eventId, Long userId, NewCommentDto newCommentDto) {
         checkEventId(eventId);
-        Event event = checkEvent(eventId);
+        EventFullDto event = checkEvent(eventId);
         if (event.getState() != State.PUBLISHED) {
             throw new ValidationException("Нельзя комментировать не опубликованное событие");
         }
@@ -59,7 +58,7 @@ public class CommentServiceImpl implements CommentService {
         if (!event.getCommenting()) {
             throw new ValidationException("Данное событие нельзя комментировать");
         }
-        Comment comment = CommentMapper.toComment(newCommentDto, event, userId);
+        Comment comment = CommentMapper.toComment(newCommentDto, eventId, userId);
         return CommentMapper.toCommentDto(commentRepository.save(comment), event.getAnnotation(), user.getName());
     }
 
@@ -68,15 +67,10 @@ public class CommentServiceImpl implements CommentService {
     public CommentDto updateComment(Long userId, Long eventId, Long commentId, NewCommentDto newCommentDto) {
         checkEventId(eventId);
         UserDto user = checkUser(userId);
-        if (!userClient.checkExistsById(userId)) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-        Event event = checkEvent(eventId);
-        if (!eventRepository.existsById(eventId)) {
-            throw new NotFoundException("Событие не найдено");
-        }
+        EventFullDto event = checkEvent(eventId);
+
         Comment comment = checkComment(commentId);
-        if (!Objects.equals(comment.getEvent().getId(), eventId)) {
+        if (!Objects.equals(comment.getEventId(), eventId)) {
             throw new ValidationException("Некорректно указан eventId");
         }
         if (comment.getAuthorId().equals(userId)) {
@@ -94,11 +88,11 @@ public class CommentServiceImpl implements CommentService {
         if (!userClient.checkExistsById(userId)) {
             throw new NotFoundException("Пользователь не найден");
         }
-        if (!eventRepository.existsById(eventId)) {
+        if (!eventClient.checkExistsById(eventId)) {
             throw new NotFoundException("Событие не найдено");
         }
         Comment comment = checkComment(commentId);
-        if (!Objects.equals(comment.getEvent().getId(), eventId)) {
+        if (!Objects.equals(comment.getEventId(), eventId)) {
             throw new ValidationException("Некорректно указан eventId");
         }
         if (comment.getAuthorId().equals(userId)) {
@@ -113,7 +107,7 @@ public class CommentServiceImpl implements CommentService {
     public void deleteComment(Long commentId, Long eventId) {
         checkEventId(eventId);
         Comment comment = checkComment(commentId);
-        if (!Objects.equals(comment.getEvent().getId(), eventId)) {
+        if (!Objects.equals(comment.getEventId(), eventId)) {
             throw new ValidationException("Некорректно указан eventId");
         }
         commentRepository.deleteById(commentId);
@@ -157,7 +151,7 @@ public class CommentServiceImpl implements CommentService {
             throw new ValidationException("Нельзя поставить лайк второй раз");
         }
         UserDto user = checkUser(comment.getAuthorId());
-        Event event = checkEvent(comment.getEvent().getId());
+        EventFullDto event = checkEvent(comment.getEventId());
 
         return CommentMapper.toCommentDto(comment, event.getAnnotation(), user.getName());
     }
@@ -178,8 +172,13 @@ public class CommentServiceImpl implements CommentService {
     public CommentDto getComment(Long id) {
         Comment comment = checkComment(id);
         UserDto user = checkUser(comment.getAuthorId());
-        Event event = checkEvent(comment.getEvent().getId());
+        EventFullDto event = checkEvent(comment.getEventId());
         return CommentMapper.toCommentDto(comment, event.getAnnotation(), user.getName());
+    }
+
+    @Override
+    public void deleteCommentsOfUser(Long userId) {
+
     }
 
 
@@ -188,7 +187,9 @@ public class CommentServiceImpl implements CommentService {
     public UserDtoForAdmin addBanCommited(Long userId, Long eventId) {
         checkEventId(eventId);
         UserDto user = checkUser(userId);
-        Event forbidEvent = checkEvent(eventId);
+        if (!eventClient.checkExistsById(eventId)) {
+            throw new NotFoundException("Событие не найдено");
+        }
         if (banRepository.existsByEventIdAndUserId(eventId, userId)) {
             throw new ValidationException("Уже добавлен такой запрет на комментирование");
         }
@@ -213,8 +214,9 @@ public class CommentServiceImpl implements CommentService {
         if (!userClient.checkExistsById(userId)) {
             throw new NotFoundException("Пользователь не найден");
         }
-        UserDto user = checkUser(userId);
-        Event forbidEvent = checkEvent(eventId);
+        if (!eventClient.checkExistsById(eventId)) {
+            throw new NotFoundException("Событие не найдено");
+        }
         if (!banRepository.existsByEventIdAndUserId(eventId, userId)) {
             throw new NotFoundException("Такого запрета на комментирование не найдено");
         }
@@ -225,9 +227,8 @@ public class CommentServiceImpl implements CommentService {
         return userClient.findById(userId);
     }
 
-    private Event checkEvent(Long eventId) {
-        return eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Событие не найдено"));
+    private EventFullDto checkEvent(Long eventId) {
+        return eventClient.findEventById(eventId);
     }
 
     private Comment checkComment(Long commentId) {
@@ -240,5 +241,4 @@ public class CommentServiceImpl implements CommentService {
             throw new ValidationException("Не задан eventId");
         }
     }
-
 }

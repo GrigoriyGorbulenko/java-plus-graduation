@@ -1,9 +1,9 @@
-package ru.practicum.ewm.comment.service;
+package ru.practicum.service;
 
+import ru.practicum.dto.comment.CommentDto;
+import ru.practicum.dto.comment.NewCommentDto;
 import ru.practicum.dto.user.UserDtoForAdmin;
-import ru.practicum.ewm.comment.dto.CommentDto;
-import ru.practicum.ewm.comment.dto.NewCommentDto;
-import ru.practicum.ewm.comment.enums.SortType;
+import ru.practicum.enums.comment.SortType;
 
 
 import java.util.List;
@@ -28,4 +28,6 @@ public interface CommentService {
     void deleteLike(Long userId, Long commentId);
 
     CommentDto getComment(Long id);
+
+    void deleteCommentsOfUser(Long userId);
 }

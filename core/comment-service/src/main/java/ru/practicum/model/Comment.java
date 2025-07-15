@@ -1,9 +1,8 @@
-package ru.practicum.ewm.comment.model;
+package ru.practicum.model;
 
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.ewm.event.model.Event;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -25,9 +24,8 @@ public class Comment {
 
     String text;
 
-    @ManyToOne
     @JoinColumn(name = "event_id")
-    Event event;
+    Long eventId;
 
     @JoinColumn(name = "author_id")
     Long authorId;
