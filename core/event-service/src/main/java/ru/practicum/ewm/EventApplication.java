@@ -9,9 +9,9 @@ import org.springframework.context.annotation.ComponentScan;
 @SpringBootApplication
 @EnableFeignClients
 @ComponentScan(basePackages = {"ru.practicum.feign"})
-public class MainApplication {
+public class EventApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(MainApplication.class, args);
+        SpringApplication.run(EventApplication.class, args);
     }
 }
