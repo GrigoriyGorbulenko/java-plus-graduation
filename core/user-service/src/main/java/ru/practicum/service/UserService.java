@@ -11,5 +11,9 @@ public interface UserService {
 
     UserDto saveUser(NewUserRequest newUserRequest);
 
+    UserDto findById(Long userId);
+
+    boolean existsById(Long userId);
+
     void deleteUser(Long id);
 }

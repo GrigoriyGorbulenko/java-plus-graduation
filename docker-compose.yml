@@ -16,9 +16,9 @@ services:
 
   event-db:
     image: postgres:16.1
-    container_name: postgres-ewm-main-db
+    container_name: postgres-event-service-db
     ports:
-      - "5432:5432"
+      - "5444:5432"
     environment:
       - POSTGRES_PASSWORD=event
       - POSTGRES_USER=event

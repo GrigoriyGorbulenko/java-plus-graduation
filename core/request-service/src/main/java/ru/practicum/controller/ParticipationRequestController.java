@@ -9,10 +9,10 @@ import ru.practicum.service.ParticipationRequestService;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/users/{userId}/requests")
 @Slf4j
+@RestController
 @RequiredArgsConstructor
+@RequestMapping("/users/{userId}/requests")
 public class ParticipationRequestController {
     private final ParticipationRequestService requestService;
 

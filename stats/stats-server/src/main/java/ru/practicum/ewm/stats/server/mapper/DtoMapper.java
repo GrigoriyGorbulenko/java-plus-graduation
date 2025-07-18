@@ -1,7 +1,7 @@
 package ru.practicum.ewm.stats.server.mapper;
 
 import lombok.experimental.UtilityClass;
-import ru.practicum.dto.stats.EndpointHitDto;
+import ru.practicum.ewm.stats.server.dto.EndpointHitDto;
 import ru.practicum.ewm.stats.server.model.EndpointHit;
 
 

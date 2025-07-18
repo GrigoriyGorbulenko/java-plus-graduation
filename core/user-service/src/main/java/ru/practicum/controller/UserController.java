@@ -36,6 +36,16 @@ public class UserController {
         return userService.saveUser(newUserRequest);
     }
 
+    @GetMapping("/{userId}")
+    public UserDto findById(@PathVariable Long userId) {
+        return userService.findById(userId);
+    }
+
+    @GetMapping("/{userId}/exists")
+    public Boolean checkExistsById(@PathVariable Long userId) {
+        return userService.existsById(userId);
+    }
+
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long userId) {

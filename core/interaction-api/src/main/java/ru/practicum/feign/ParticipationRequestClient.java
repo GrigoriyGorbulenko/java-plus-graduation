@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@FeignClient(name = "request-service", path = "/internal/requests")
+@FeignClient(name = "request-service", path = "/requests")
 public interface ParticipationRequestClient {
 
     @CircuitBreaker(name = "defaultBreaker", fallbackMethod = "prepareConfirmedRequestsFallback")

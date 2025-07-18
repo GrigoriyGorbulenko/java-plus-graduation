@@ -16,9 +16,9 @@ spring:
 
   datasource:
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/main
-    username: postgres
-    password: 52458
+    url: jdbc:postgresql://localhost:5444/event-db
+    username: event
+    password: event
 
 resilience4j:
   circuitbreaker:
