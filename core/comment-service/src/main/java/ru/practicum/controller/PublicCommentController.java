@@ -1,0 +1,28 @@
+package ru.practicum.controller;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
+import ru.practicum.dto.comment.CommentDto;
+import ru.practicum.enums.comment.SortType;
+import ru.practicum.service.CommentService;
+
+
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/comments")
+@Slf4j
+public class PublicCommentController {
+
+    private final CommentService commentService;
+
+    @GetMapping("/{eventId}")
+    private List<CommentDto> getAllCommentsByEventId(@PathVariable Long eventId,
+                                                     @RequestParam(defaultValue = "LIKES") SortType sort,
+                                                     @RequestParam(defaultValue = "0") Integer from,
+                                                     @RequestParam(defaultValue = "20") Integer size) {
+        return commentService.getAllComments(eventId, sort, from, size);
+    }
+}
