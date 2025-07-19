@@ -6,7 +6,3 @@ CREATE TABLE IF NOT EXISTS participation_requests(
     status VARCHAR(50) NOT NULL,
     CONSTRAINT UQ_PARTICIPANT_PER_EVENT UNIQUE (requester_id, event_id)
 );
-
-
-
-
