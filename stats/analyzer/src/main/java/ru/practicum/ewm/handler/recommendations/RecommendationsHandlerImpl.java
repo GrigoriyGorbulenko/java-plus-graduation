@@ -1,4 +1,4 @@
-package ru.practicum.ewm.handler;
+package ru.practicum.ewm.handler.recommendations;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -9,6 +9,7 @@ import ru.practicum.ewm.grpc.stats.event.InteractionsCountRequestProto;
 import ru.practicum.ewm.grpc.stats.event.RecommendedEventProto;
 import ru.practicum.ewm.grpc.stats.event.SimilarEventsRequestProto;
 import ru.practicum.ewm.grpc.stats.event.UserPredictionsRequestProto;
+import ru.practicum.ewm.handler.recommendations.RecommendationsHandler;
 import ru.practicum.ewm.model.EventSimilarity;
 import ru.practicum.ewm.model.UserAction;
 import ru.practicum.ewm.repository.EventSimilarityRepository;

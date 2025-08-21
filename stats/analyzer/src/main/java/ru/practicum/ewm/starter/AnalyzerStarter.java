@@ -1,16 +1,20 @@
 package ru.practicum.ewm.starter;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-import ru.practicum.ewm.processors.EventSimilarityProcessor;
-import ru.practicum.ewm.processors.UserActionProcessor;
+import ru.practicum.ewm.processors.event.EventSimilarityProcessor;
+import ru.practicum.ewm.processors.user.UserActionProcessor;
+
 
 @Component
-@RequiredArgsConstructor
 public class AnalyzerStarter implements CommandLineRunner {
-    private  UserActionProcessor userActionProcessor;
-    private  EventSimilarityProcessor eventSimilarityProcessor;
+    private final UserActionProcessor userActionProcessor;
+    private final EventSimilarityProcessor eventSimilarityProcessor;
+
+    public AnalyzerStarter(EventSimilarityProcessor eventSimilarityProcessor, UserActionProcessor userActionProcessor) {
+        this.eventSimilarityProcessor = eventSimilarityProcessor;
+        this.userActionProcessor = userActionProcessor;
+    }
 
 
     @Override

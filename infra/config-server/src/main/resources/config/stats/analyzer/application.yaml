@@ -34,7 +34,7 @@ spring:
 
   datasource:
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5321/analyzer-db
+    url: jdbc:postgresql://localhost:5443/analyzer-db
     username: analyzer
     password: analyzer
 

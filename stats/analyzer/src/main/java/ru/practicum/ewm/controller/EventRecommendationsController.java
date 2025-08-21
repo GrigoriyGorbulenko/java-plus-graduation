@@ -9,7 +9,7 @@ import ru.practicum.ewm.grpc.stats.event.InteractionsCountRequestProto;
 import ru.practicum.ewm.grpc.stats.event.RecommendedEventProto;
 import ru.practicum.ewm.grpc.stats.event.SimilarEventsRequestProto;
 import ru.practicum.ewm.grpc.stats.event.UserPredictionsRequestProto;
-import ru.practicum.ewm.handler.RecommendationsHandler;
+import ru.practicum.ewm.handler.recommendations.RecommendationsHandler;
 
 @Slf4j
 @GrpcService
@@ -20,7 +20,7 @@ public class EventRecommendationsController extends RecommendationsControllerGrp
     @Override
     public void getRecommendationsForUser(UserPredictionsRequestProto request,
                                           StreamObserver<RecommendedEventProto> responseObserver) {
-        log.info("Получили запрос на получение рекомендаций для пользователя {}", request);
+        log.info("Запрос на получение рекомендаций для пользователя {}", request);
 
         try {
             handler.getRecommendationsForUser(request).forEach(responseObserver::onNext);
@@ -33,7 +33,7 @@ public class EventRecommendationsController extends RecommendationsControllerGrp
     @Override
     public void getSimilarEvents(SimilarEventsRequestProto request,
                                  StreamObserver<RecommendedEventProto> responseObserver) {
-        log.info("Получили запрос на получение похожих событий {}", request);
+        log.info("Запрос на получение похожих событий {}", request);
 
         try {
             handler.getSimilarEvents(request).forEach(responseObserver::onNext);

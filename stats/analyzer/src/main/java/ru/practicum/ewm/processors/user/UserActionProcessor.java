@@ -1,4 +1,4 @@
-package ru.practicum.ewm.processors;
+package ru.practicum.ewm.processors.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +8,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import ru.practicum.ewm.handler.UserActionAnalyzerHandler;
+import ru.practicum.ewm.handler.user.UserActionAnalyzerHandler;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 
 import java.time.Duration;

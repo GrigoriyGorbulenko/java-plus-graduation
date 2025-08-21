@@ -22,7 +22,7 @@ public class UserActionHandlerImpl implements UserActionHandler {
 
     @Override
     public void handle(UserActionProto userActionProto) {
-        log.info("Отправляем сообщение {} в topic {}", userActionProto, topic);
+        log.info("Отправили сообщение {} в topic {}", userActionProto, topic);
         producer.send(toAvro(userActionProto), userActionProto.getEventId(),
                 mapToInstant(userActionProto), topic);
     }

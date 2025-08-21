@@ -1,4 +1,4 @@
-package ru.practicum.ewm.handler;
+package ru.practicum.ewm.handler.user;
 
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 

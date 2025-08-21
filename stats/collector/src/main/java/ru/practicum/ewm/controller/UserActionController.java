@@ -20,7 +20,7 @@ public class UserActionController extends UserActionControllerGrpc.UserActionCon
 
     @Override
     public void collectUserAction(UserActionProto request, StreamObserver<Empty> responseObserver) {
-        log.info("Получили grpc сообщение {}", request);
+        log.info("Получили сообщение {}", request);
 
         try {
             userActionHandler.handle(request);

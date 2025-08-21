@@ -69,14 +69,25 @@ public class PublicEventController {
     }
 
     @GetMapping("/{id}")
-    public EventFullDto getEventById(HttpServletRequest httpServletRequest, @PathVariable("id") @Positive Long id) {
+    public EventFullDto getEventById(@RequestHeader("X-EWM-USER-ID") Long userId, @PathVariable("id") @Positive Long id) {
         log.info("Получение подробной информации об опубликованном событии по его идентификатору.");
 
         try {
-            return eventService.getPublicEventById(httpServletRequest, id);
+            return eventService.getPublicEventById(userId, id);
         } catch (Exception e) {
             log.error("При запуске с параметрами id " + id, e);
             throw e;
         }
+    }
+
+    @GetMapping("/recommendations")
+    public List<EventShortDto> getEventsRecommendations(@RequestHeader("X-EWM-USER-ID") long userId,
+                                                        @RequestParam(defaultValue = "10") int maxResults) {
+        return eventService.getEventsRecommendations(userId, maxResults);
+    }
+
+    @PutMapping("/{eventId}/like")
+    public void addLikeToEvent(@PathVariable Long eventId, @RequestHeader("X-EWM-USER-ID") long userId) {
+        eventService.addLikeToEvent(eventId, userId);
     }
 }

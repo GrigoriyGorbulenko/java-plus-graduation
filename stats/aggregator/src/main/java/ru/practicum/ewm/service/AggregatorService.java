@@ -41,10 +41,10 @@ public class AggregatorService {
 
                 for (ConsumerRecord<Long, UserActionAvro> record : records) {
                     UserActionAvro action = record.value();
-                    log.info("обрабатываем действие пользователя {}", action);
+                    log.info("обрабатываем действие {}", action);
 
                     List<EventSimilarityAvro> result = handler.calcSimilarity(action);
-                    log.info("Получили список коэффициентов схожести {}", result);
+                    log.info("Получили список коэффициентов {}", result);
                     producer.send(result, similarityTopic);
                     producer.flush();
                 }
@@ -52,7 +52,7 @@ public class AggregatorService {
             }
         } catch (WakeupException ignored) {
         } catch (Exception e) {
-            log.error("Ошибка во время обработки событий от пользователей", e);
+            log.error("Ошибка во время обработки событий", e);
         } finally {
             try {
                 producer.flush();

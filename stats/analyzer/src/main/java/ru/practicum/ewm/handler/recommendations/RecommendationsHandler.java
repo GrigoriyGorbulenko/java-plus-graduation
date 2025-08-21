@@ -1,4 +1,4 @@
-package ru.practicum.ewm.handler;
+package ru.practicum.ewm.handler.recommendations;
 
 import ru.practicum.ewm.grpc.stats.event.InteractionsCountRequestProto;
 import ru.practicum.ewm.grpc.stats.event.RecommendedEventProto;

@@ -43,4 +43,10 @@ public class AdminParticipationRequestController {
     public void deleteRequestsOfUser(@RequestParam Long userId) {
         requestService.deleteByRequesterId(userId);
     }
+
+    @GetMapping("/{eventId}/{userId}/check-user-confirmed")
+    public boolean checkExistsByEventIdAndRequesterIdAndStatus(@PathVariable Long eventId,@PathVariable Long userId,
+                                                               @RequestParam Status status) {
+        return requestService.checkExistsByEventIdAndRequesterIdAndStatus(eventId, userId, status);
+    }
 }

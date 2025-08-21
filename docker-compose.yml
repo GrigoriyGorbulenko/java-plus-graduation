@@ -78,7 +78,7 @@ services:
     image: postgres:16.1
     container_name: postgres-analyzer-db
     ports:
-      - "5321:5432"
+      - "5443:5432"
     environment:
       - POSTGRES_PASSWORD=analyzer
       - POSTGRES_USER=analyzer

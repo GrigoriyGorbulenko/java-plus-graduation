@@ -24,4 +24,6 @@ public interface ParticipationRequestService {
     void updateRequestStatus(Long requestId, Status status);
 
     void deleteByRequesterId(Long requesterId);
+
+    boolean checkExistsByEventIdAndRequesterIdAndStatus(Long eventId, Long userId, Status status);
 }
