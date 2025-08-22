@@ -59,12 +59,12 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
             throw new ConflictDataException("Пользователь не может создать запрос на участие в своем же событии");
         }
         if (!event.getState().equals(State.PUBLISHED)) {
-            throw new ConflictDataException("Нельзя участвовать в неопубликованном событии");
+            throw new ConflictDataException("Участие в неопубликованном событии недоступно");
         }
         Integer participantLimit = event.getParticipantLimit();
         Integer confirmedRequests = event.getConfirmedRequests();
         if (!participantLimit.equals(0) && participantLimit.equals(confirmedRequests)) {
-            throw new ConflictDataException("Лимит запросов на участие в событии уже достигнут");
+            throw new ConflictDataException("Достигнут лимит запросов на участие");
         }
         Status status;
         if (participantLimit.equals(0) || !event.getRequestModeration()) {
@@ -77,7 +77,6 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                 .eventId(event.getId())
                 .status(status)
                 .build();
-
         ParticipationRequestDto requestDto = ParticipationRequestMapper
                 .toParticipationRequestDto(requestRepository.save(participationRequest));
 
@@ -110,7 +109,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
     @Override
     public Map<Long, List<ParticipationRequestDto>> prepareConfirmedRequests(List<Long> eventIds) {
-        log.info("Получаем список подтверждённых запросов для всех событий.");
+        log.info("Получили список подтвержденных запросов");
 
         List<ParticipationRequestDto> confirmedRequests = ParticipationRequestMapper
                 .toParticipationRequestDto(requestRepository.findConfirmedRequests(eventIds));

@@ -26,7 +26,7 @@ public abstract class BaseAvroDeserializer<T extends SpecificRecordBase> impleme
             }
             return null;
         } catch (Exception e) {
-            throw new RuntimeException("Ошибка десериализации данных из топика [" + topic + "]", e);
+            throw new RuntimeException("Ошибка десериализации топика [" + topic + "]", e);
         }
     }
 }

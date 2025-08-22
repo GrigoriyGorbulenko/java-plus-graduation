@@ -69,7 +69,7 @@ public class PublicEventController {
     }
 
     @GetMapping("/{id}")
-    public EventFullDto getEventById(@RequestHeader("X-EWM-USER-ID") Long userId, @PathVariable("id") @Positive Long id) {
+    public EventFullDto getEventById(@RequestHeader("X-EWM-USER-ID") long userId, @PathVariable("id") @Positive Long id) {
         log.info("Получение подробной информации об опубликованном событии по его идентификатору.");
 
         try {

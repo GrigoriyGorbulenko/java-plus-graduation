@@ -14,13 +14,13 @@ import ru.practicum.ewm.handler.recommendations.RecommendationsHandler;
 @Slf4j
 @GrpcService
 @RequiredArgsConstructor
-public class EventRecommendationsController extends RecommendationsControllerGrpc.RecommendationsControllerImplBase {
+public class RecommendationsController extends RecommendationsControllerGrpc.RecommendationsControllerImplBase {
     private final RecommendationsHandler handler;
 
     @Override
     public void getRecommendationsForUser(UserPredictionsRequestProto request,
                                           StreamObserver<RecommendedEventProto> responseObserver) {
-        log.info("Запрос на получение рекомендаций для пользователя {}", request);
+        log.info("Получение рекомендаций для пользователя {}", request);
 
         try {
             handler.getRecommendationsForUser(request).forEach(responseObserver::onNext);
@@ -33,12 +33,13 @@ public class EventRecommendationsController extends RecommendationsControllerGrp
     @Override
     public void getSimilarEvents(SimilarEventsRequestProto request,
                                  StreamObserver<RecommendedEventProto> responseObserver) {
-        log.info("Запрос на получение похожих событий {}", request);
+        log.info("Получение похожих событий {}", request);
 
         try {
             handler.getSimilarEvents(request).forEach(responseObserver::onNext);
             responseObserver.onCompleted();
         } catch (Exception e) {
+            log.error("Ошибка получения мероприятий.");
             responseObserver.onError(e);
         }
     }
@@ -46,7 +47,7 @@ public class EventRecommendationsController extends RecommendationsControllerGrp
     @Override
     public void getInteractionsCount(InteractionsCountRequestProto request,
                                      StreamObserver<RecommendedEventProto> responseObserver) {
-        log.info("Получили запрос на получение количества взаимодействий с мероприятиями {}", request);
+        log.info("Получение мероприятий {}", request);
 
         try {
             handler.getInteractionsCount(request).forEach(responseObserver::onNext);

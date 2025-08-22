@@ -14,17 +14,17 @@ import java.util.Properties;
 @Configuration
 @RequiredArgsConstructor
 public class KafkaProducerConfiguration {
-    private final Environment env;
+    private final Environment environment;
 
     @Bean
     public Producer<Long, SpecificRecordBase> getProducer() {
         Properties config = new Properties();
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                env.getProperty("kafka.producer.properties.bootstrap-servers"));
+                environment.getProperty("kafka.producer.properties.bootstrap-servers"));
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-                env.getProperty("kafka.producer.properties.key-serializer"));
+                environment.getProperty("kafka.producer.properties.key-serializer"));
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-                env.getProperty("kafka.producer.properties.value-serializer"));
+                environment.getProperty("kafka.producer.properties.value-serializer"));
 
         return new KafkaProducer<>(config);
     }

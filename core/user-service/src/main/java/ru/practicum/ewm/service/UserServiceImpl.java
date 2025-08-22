@@ -9,6 +9,9 @@ import ru.practicum.ewm.dto.user.NewUserRequest;
 import ru.practicum.ewm.dto.user.UserDto;
 import ru.practicum.ewm.exception.DuplicateException;
 import ru.practicum.ewm.exception.NotFoundException;
+import ru.practicum.ewm.feign.CommentClient;
+import ru.practicum.ewm.feign.EventClient;
+import ru.practicum.ewm.feign.ParticipationRequestClient;
 import ru.practicum.ewm.mapper.UserMapper;
 import ru.practicum.ewm.repository.UserRepository;
 
@@ -21,6 +24,9 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+
+
+
 
     @Override
     public List<UserDto> getAllUsers(List<Long> ids, Integer from, Integer size) {
@@ -64,5 +70,6 @@ public class UserServiceImpl implements UserService {
             throw new NotFoundException("Пользователь не найден");
         }
         userRepository.deleteById(id);
+        log.info("Удаление пользователя");
     }
 }

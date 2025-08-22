@@ -14,8 +14,8 @@ public class UserActionClient {
     private final UserActionControllerGrpc.UserActionControllerBlockingStub userActionStub;
 
     public UserActionClient(
-            @GrpcClient("collector") UserActionControllerGrpc.UserActionControllerBlockingStub userActionStub) {
-        this.userActionStub = userActionStub;
+            @GrpcClient("collector") UserActionControllerGrpc.UserActionControllerBlockingStub client) {
+        this.userActionStub = client;
     }
 
     public void collectUserAction(Long eventId, Long userId, ActionTypeProto type, Instant instant) {

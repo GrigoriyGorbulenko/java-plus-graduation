@@ -11,7 +11,7 @@ kafka:
       key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
       user-action-deserializer: ru.practicum.ewm.deserializer.UserActionAvroDeserializer
       enable-auto-commit: false
-      poll-timeout: 1000
+      poll-timeout: 500
       similarity-client-id: similarityClient
       similarity-group-id: similarityGroup
       event-similarity-deserializer: ru.practicum.ewm.deserializer.EventSimilarityAvroDeserializer

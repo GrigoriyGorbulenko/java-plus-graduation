@@ -19,7 +19,7 @@ public interface EventService {
 
     List<EventShortDto> getPublicEventsByFilter(HttpServletRequest httpServletRequest, EventPublicFilter inputFilter);
 
-    EventFullDto getPublicEventById(Long userId, Long id);
+    EventFullDto getPublicEventById(long userId, Long id);
 
     List<EventFullDto> getEventsForAdmin(EventAdminFilter admin);
 

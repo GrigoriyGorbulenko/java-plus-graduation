@@ -17,11 +17,11 @@ import java.util.stream.StreamSupport;
 
 @Service
 public class RecommendationsClient {
-    private final RecommendationsControllerGrpc.RecommendationsControllerBlockingStub recommendationsStub;
+    private final RecommendationsControllerGrpc.RecommendationsControllerBlockingStub client;
 
     public RecommendationsClient(
-            @GrpcClient("analyzer") RecommendationsControllerGrpc.RecommendationsControllerBlockingStub recommendationsStub) {
-        this.recommendationsStub = recommendationsStub;
+            @GrpcClient("analyzer") RecommendationsControllerGrpc.RecommendationsControllerBlockingStub client) {
+        this.client = client;
     }
 
     public Stream<RecommendedEventProto> getRecommendationsForUser(long userId, int maxResults) {
@@ -30,7 +30,7 @@ public class RecommendationsClient {
                 .setMaxResults(maxResults)
                 .build();
 
-        Iterator<RecommendedEventProto> iterator = recommendationsStub.getRecommendationsForUser(request);
+        Iterator<RecommendedEventProto> iterator = client.getRecommendationsForUser(request);
 
         return asStream(iterator);
     }
@@ -42,7 +42,7 @@ public class RecommendationsClient {
                 .setMaxResults(maxResults)
                 .build();
 
-        Iterator<RecommendedEventProto> iterator = recommendationsStub.getSimilarEvents(request);
+        Iterator<RecommendedEventProto> iterator = client.getSimilarEvents(request);
 
         return asStream(iterator);
     }
@@ -52,7 +52,7 @@ public class RecommendationsClient {
                 .addAllEventId(eventIds)
                 .build();
 
-        Iterator<RecommendedEventProto> iterator = recommendationsStub.getInteractionsCount(request);
+        Iterator<RecommendedEventProto> iterator = client.getInteractionsCount(request);
 
         return asStream(iterator);
     }

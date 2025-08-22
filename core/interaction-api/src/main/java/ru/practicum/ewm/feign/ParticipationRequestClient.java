@@ -59,6 +59,6 @@ public interface ParticipationRequestClient {
 
     @PutMapping("/{requestId}")
     default void updateRequestStatusFallback(Long requestId, String status, Throwable throwable) {
-        throw new ServerUnavailable("Request Server unavailable");
+        throw new ServerUnavailable("Сервер недоступен");
     }
 }

@@ -216,6 +216,7 @@ public class EventServiceImpl implements EventService {
         Map<Long, UserDto> users = userClient.getAllUsers(userIds, 0, userIds.size()).stream()
                 .collect(Collectors.toMap(UserDto::getId, Function.identity()));
 
+
         List<EventShortDto> result = events.stream()
                 .map(event -> EventMapper.mapToShortDto(event, 0d, users.get(event.getInitiatorId())))
                 .toList();
@@ -239,7 +240,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventFullDto getPublicEventById(Long userId, Long id) {
+    public EventFullDto getPublicEventById(long userId, Long id) {
 
         Event event = eventRepository.findById(id).orElseThrow(
                 () -> new NotFoundRecordInBDException(String.format("Не найдено событие в БД с ID = %d.", id)));
@@ -307,7 +308,8 @@ public class EventServiceImpl implements EventService {
                 })
                 .toList();
     }
-    
+
+    // admin Редактирование данных любого события администратором. Валидация данных не требуется
     @Transactional
     @Override
     public EventFullDto updateEventAdmin(Long eventId, UpdateEventAdminRequest updateEventAdminRequest) {
@@ -401,10 +403,10 @@ public class EventServiceImpl implements EventService {
             throw new ValidationException("Событие должно быть создано текущим пользователем");
         }
         if (Objects.equals(event.getConfirmedRequests(), event.getParticipantLimit())) {
-            throw new ConflictDataException("Лимит участников уже исчерпан");
+            throw new ConflictDataException("Лимит участников исчерпан");
         }
         List<Long> requestIds = updateRequest.getRequestIds();
-        log.info("Получили список id запросов на участие: {}", requestIds);
+        log.info("Список id запросов на участие: {}", requestIds);
         List<ParticipationRequestDto> requestList = requestClient.findAllById(requestIds);
         if (requestList.stream()
                 .anyMatch(request -> !Objects.equals(request.getEvent(), eventId))) {
@@ -527,15 +529,13 @@ public class EventServiceImpl implements EventService {
 
         if (newEvent.getStateAction() == StateAction.PUBLISH_EVENT) {
             if (oldEvent.getState() != State.PENDING) {
-                throw new OperationFailedException("Невозможно опубликовать событие. Его можно " +
-                        "опубликовать только в состоянии ожидания публикации.");
+                throw new OperationFailedException("Публикация события недоступна");
             }
         }
         if (newEvent.getStateAction() == StateAction.REJECT_EVENT) {
             if (oldEvent.getState() == State.PUBLISHED) {
-                throw new OperationFailedException("Событие опубликовано, поэтому отменить его невозможно.");
+                throw new OperationFailedException("Недоступно изменение опубликованного события");
             }
         }
     }
-
 }
