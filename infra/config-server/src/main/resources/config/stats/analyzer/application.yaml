@@ -9,12 +9,12 @@ kafka:
       user-action-client-id: userAction
       user-action-group-id: userActionGroup
       key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
-      user-action-deserializer: ru.practicum.ewm.deserializer.UserActionAvroDeserializer
+      user-action-deserializer: ru.practicum.ewm.deserializer.UserActionDeserializer
       enable-auto-commit: false
       poll-timeout: 500
       similarity-client-id: similarityClient
       similarity-group-id: similarityGroup
-      event-similarity-deserializer: ru.practicum.ewm.deserializer.EventSimilarityAvroDeserializer
+      event-similarity-deserializer: ru.practicum.ewm.deserializer.EventSimilarityDeserializer
   topics:
     user-action: stats.user-actions.v1
     events-similarity: stats.events-similarity.v1

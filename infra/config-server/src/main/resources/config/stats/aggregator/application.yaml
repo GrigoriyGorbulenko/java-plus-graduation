@@ -9,7 +9,7 @@ kafka:
       client-id: UserActionConsumer
       group-id: userAction.group.id
       key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
-      value-deserializer: ru.practicum.ewm.deserializer.UserActionAvroDeserializer
+      value-deserializer: ru.practicum.ewm.deserializer.UserActionDeserializer
       enable-auto-commit: false
       poll-timeout: 100
   topics:
