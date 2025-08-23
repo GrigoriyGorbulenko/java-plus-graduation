@@ -1,13 +1,13 @@
-package ru.practicum.category.controller;
+package ru.practicum.controller;
 
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
 
+import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.category.CategoryDto;
-import ru.practicum.category.service.CategoryService;
+import ru.practicum.service.CategoryService;
 
 import java.util.List;
 

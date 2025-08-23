@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.event.service.EventService;
 
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/internal/events")
@@ -19,6 +20,11 @@ public class InternalEventController {
     @PutMapping("/{eventId}")
     public void updateConfirmedRequests(@PathVariable Long eventId, @RequestParam Integer confirmedRequests) {
         eventService.updateConfirmedRequests(eventId, confirmedRequests);
+    }
+
+    @GetMapping("/category")
+    public boolean checkExistsByCategoryId(@RequestParam Long catId) {
+        return eventService.checkExistsByCategoryId(catId);
     }
 
     @GetMapping

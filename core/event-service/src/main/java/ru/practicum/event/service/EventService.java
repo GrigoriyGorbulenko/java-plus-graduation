@@ -1,9 +1,10 @@
 package ru.practicum.event.service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.event.*;
 import ru.practicum.dto.request.ParticipationRequestDto;
+import ru.practicum.event.model.Event;
 
 
 import java.util.List;
@@ -32,9 +33,8 @@ public interface EventService {
 
     EventFullDto findEventById(Long eventId);
 
-    @Transactional
     void updateConfirmedRequests(Long eventId, Integer confirmedRequests);
-
+    boolean checkExistsByCategoryId(Long catId);
     boolean checkExistsById(Long eventId);
 
     void deleteEventsByUser(Long userId);

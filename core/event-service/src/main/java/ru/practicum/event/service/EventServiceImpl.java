@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.event.*;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.dto.stats.EndpointHitDto;
@@ -19,14 +20,14 @@ import ru.practicum.dto.user.UserDto;
 import ru.practicum.enums.event.State;
 import ru.practicum.enums.event.StateAction;
 import ru.practicum.enums.request.Status;
-import ru.practicum.category.model.Category;
-import ru.practicum.category.repository.CategoryRepository;
+
 
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.QEvent;
 import ru.practicum.event.repository.EventRepository;
 
+import ru.practicum.feign.CategoryClient;
 import ru.practicum.feign.ParticipationRequestClient;
 import ru.practicum.feign.StatClient;
 import ru.practicum.feign.UserClient;
@@ -48,7 +49,7 @@ public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
 
-    private final CategoryRepository categoryRepository;
+    private final CategoryClient categoryClient;
 
     private final UserClient userClient;
 
@@ -64,20 +65,19 @@ public class EventServiceImpl implements EventService {
     public EventFullDto addEvent(NewEventDto eventDto, Long userId) {
         checkFields(eventDto);
 
-        Category category = categoryRepository.findById(eventDto.getCategory())
-                .orElseThrow(() -> new NotFoundException("Категория не найдена"));
+        CategoryDto categoryDto = categoryClient.getCategoryById(eventDto.getCategory());
 
         UserDto user = userClient.findById(userId);
 
         if (user.getName().equals("UNKNOWN")) {
-            throw new ServerUnavailable("User Server unavailable");
+            throw new ServerUnavailable("Сервер недоступен");
         }
 
         if (eventDto.getCommenting() == null) {
             eventDto.setCommenting(true);
         }
-        Event event = eventRepository.save(EventMapper.mapToEvent(eventDto, category, userId));
-        return EventMapper.mapToFullDto(event, 0L, user);
+        Event event = eventRepository.save(EventMapper.mapToEvent(eventDto, categoryDto.getId(), userId));
+        return EventMapper.mapToFullDto(event, 0L, user, categoryDto);
     }
 
     @Override
@@ -102,9 +102,10 @@ public class EventServiceImpl implements EventService {
                             .filter(statsDto -> statsDto.getUri().equals("/events/" + event.getId()))
                             .findFirst();
                     if (result.isPresent()) {
-                        return EventMapper.mapToShortDto(event, result.get().getHits(), user);
+                        return EventMapper.mapToShortDto(event, result.get().getHits(),
+                                user, categoryClient.getCategoryById(event.getCategoryId()));
                     } else {
-                        return EventMapper.mapToShortDto(event, 0L, user);
+                        return EventMapper.mapToShortDto(event, 0L, user, categoryClient.getCategoryById(event.getCategoryId()));
                     }
                 })
                 .toList();
@@ -123,9 +124,9 @@ public class EventServiceImpl implements EventService {
                 List.of(uri), false);
         Optional<StatsDto> result = statsList.stream().findFirst();
         if (result.isPresent()) {
-            return EventMapper.mapToFullDto(event, result.get().getHits(), user);
+            return EventMapper.mapToFullDto(event, result.get().getHits(), user, categoryClient.getCategoryById(event.getCategoryId()));
         } else {
-            return EventMapper.mapToFullDto(event, 0L, user);
+            return EventMapper.mapToFullDto(event, 0L, user, categoryClient.getCategoryById(event.getCategoryId()));
         }
     }
 
@@ -147,9 +148,8 @@ public class EventServiceImpl implements EventService {
             event.setAnnotation(updateRequest.getAnnotation());
         }
         if (updateRequest.getCategory() != null) {
-            Category category = categoryRepository.findById(updateRequest.getCategory())
-                    .orElseThrow(() -> new NotFoundException("Категория не найдена"));
-            event.setCategory(category);
+            CategoryDto categoryDto = categoryClient.getCategoryById(updateRequest.getCategory());
+            event.setCategoryId(categoryDto.getId());
         }
         if (updateRequest.getDescription() != null && !updateRequest.getDescription().isBlank()) {
             event.setDescription(updateRequest.getDescription());
@@ -188,7 +188,7 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        return EventMapper.mapToFullDto(event, 0L, user);
+        return EventMapper.mapToFullDto(event, 0L, user, categoryClient.getCategoryById(event.getCategoryId()));
     }
 
     //public Получение событий с возможностью фильтрации
@@ -204,7 +204,7 @@ public class EventServiceImpl implements EventService {
                 .or(QEvent.event.description.likeIgnoreCase(inputFilter.getText()))
                 .and(QEvent.event.state.in(State.PUBLISHED));
         if (inputFilter.getCategories() != null) {
-            conditions = conditions.and(QEvent.event.category.id.in(inputFilter.getCategories()));
+            conditions = conditions.and(QEvent.event.categoryId.in(inputFilter.getCategories()));
         }
         if (inputFilter.getPaid() != null) {
             conditions.and(QEvent.event.paid.eq(inputFilter.getPaid()));
@@ -245,7 +245,7 @@ public class EventServiceImpl implements EventService {
                             .filter(statsDto -> statsDto.getUri().equals("/events/" + event.getId()))
                             .findFirst();
                     return EventMapper.mapToShortDto(event, stat.isPresent() ? stat.get().getHits() : 0L,
-                            users.get(event.getInitiatorId()));
+                            users.get(event.getInitiatorId()), categoryClient.getCategoryById(event.getCategoryId()));
                 })
                 .toList();
         List<EventShortDto> resultList = new ArrayList<>(result);
@@ -295,7 +295,8 @@ public class EventServiceImpl implements EventService {
         Optional<StatsDto> stat = statClient.getStats(event.getCreatedOn().minusSeconds(1),
                 LocalDateTime.now(), List.of("/events/" + event.getId()), true).stream().findFirst();
 
-        EventFullDto result = EventMapper.mapToFullDto(event, stat.isPresent() ? stat.get().getHits() : 0L, user);
+        EventFullDto result = EventMapper.mapToFullDto(event, stat.isPresent() ? stat.get().getHits() : 0L, user,
+                categoryClient.getCategoryById(event.getCategoryId()));
 
         List<ParticipationRequestDto> confirmedRequests = requestClient
                 .prepareConfirmedRequests(List.of(event.getId())).get(event.getId());
@@ -337,7 +338,7 @@ public class EventServiceImpl implements EventService {
             conditions = conditions.and(QEvent.event.state.in(input.getStates()));
         }
         if (input.getCategories() != null) {
-            conditions = conditions.and(QEvent.event.category.id.in(input.getCategories()));
+            conditions = conditions.and(QEvent.event.categoryId.in(input.getCategories()));
         }
         List<Event> events = eventRepository.findAll(conditions, pageable).getContent();
 
@@ -365,7 +366,7 @@ public class EventServiceImpl implements EventService {
                             .findFirst();
                     var requests = confirmedRequests.get(event.getId());
                     var r = EventMapper.mapToFullDto(event, stat.isPresent() ? stat.get().getHits() : 0L,
-                            users.get(event.getInitiatorId()));
+                            users.get(event.getInitiatorId()), categoryClient.getCategoryById(event.getCategoryId()));
 
                     r.setConfirmedRequests(requests != null ? requests.size() : 0);
                     return r;
@@ -387,7 +388,7 @@ public class EventServiceImpl implements EventService {
             event.setAnnotation(updateEventAdminRequest.getAnnotation());
         }
         if (updateEventAdminRequest.getCategory() != null) {
-            event.getCategory().setId(updateEventAdminRequest.getCategory());
+            event.setCategoryId(updateEventAdminRequest.getCategory());
         }
         if (updateEventAdminRequest.getDescription() != null && !updateEventAdminRequest.getDescription().isBlank()) {
             event.setDescription(updateEventAdminRequest.getDescription());
@@ -435,7 +436,8 @@ public class EventServiceImpl implements EventService {
         Optional<StatsDto> stat = statClient.getStats(event.getCreatedOn().minusSeconds(1), LocalDateTime.now(),
                 List.of("/events/" + event.getId()), false).stream().findFirst();
 
-        EventFullDto result = EventMapper.mapToFullDto(event, stat.isPresent() ? stat.get().getHits() : 0L, user);
+        EventFullDto result = EventMapper.mapToFullDto(event, stat.isPresent() ? stat.get().getHits() : 0L, user,
+                categoryClient.getCategoryById(event.getCategoryId()));
 
         List<ParticipationRequestDto> confirmedRequests = requestClient
                 .prepareConfirmedRequests(List.of(event.getId())).get(event.getId());
@@ -519,7 +521,7 @@ public class EventServiceImpl implements EventService {
 
         UserDto user = userClient.findById(event.getInitiatorId());
 
-        return EventMapper.mapToFullDto(event, 0L, user);
+        return EventMapper.mapToFullDto(event, 0L, user, categoryClient.getCategoryById(event.getCategoryId()));
     }
 
     @Transactional
@@ -528,10 +530,13 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException("Событие не найдено"));
         event.setConfirmedRequests(confirmedRequests);
     }
-
     @Override
     public boolean checkExistsById(Long eventId) {
         return eventRepository.existsById(eventId);
+    }
+    @Override
+    public boolean checkExistsByCategoryId(Long catId) {
+        return eventRepository.existsByCategoryId(catId);
     }
 
     @Override

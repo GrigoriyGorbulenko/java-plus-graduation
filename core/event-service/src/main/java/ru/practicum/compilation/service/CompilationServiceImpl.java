@@ -19,6 +19,7 @@ import ru.practicum.event.repository.EventRepository;
 
 
 import ru.practicum.exception.NotFoundException;
+import ru.practicum.feign.CategoryClient;
 import ru.practicum.feign.StatClient;
 import ru.practicum.feign.UserClient;
 
@@ -35,6 +36,7 @@ public class CompilationServiceImpl implements CompilationService {
     private final EventRepository eventRepository;
     private final StatClient statClient;
     private final UserClient userClient;
+    private final CategoryClient categoryClient;
 
     @Override
     @Transactional
@@ -144,10 +146,10 @@ public class CompilationServiceImpl implements CompilationService {
                     if (result.isPresent()) {
                         return EventMapper.mapToShortDto(event, result.get().getHits(),
                                 usersMap.getOrDefault(event.getInitiatorId(),
-                                        UserDto.builder().id(0L).name("Unknown").build()));
+                                        UserDto.builder().id(0L).name("Unknown").build()), categoryClient.getCategoryById(event.getCategoryId()));
                     } else {
                         return EventMapper.mapToShortDto(event, 0L, usersMap.getOrDefault(event.getInitiatorId(),
-                                UserDto.builder().id(0L).name("Unknown").build()));
+                                UserDto.builder().id(0L).name("Unknown").build()), categoryClient.getCategoryById(event.getCategoryId()));
                     }
                 })
                 .collect(Collectors.toList());

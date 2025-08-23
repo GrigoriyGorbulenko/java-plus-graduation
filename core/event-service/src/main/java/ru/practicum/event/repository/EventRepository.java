@@ -3,7 +3,9 @@ package ru.practicum.event.repository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
+import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.event.model.Event;
+
 
 import java.util.List;
 
@@ -11,8 +13,7 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
 
     List<Event> findAllByInitiatorId(Long userId, PageRequest pageRequest);
 
-    Boolean existsByCategoryId(Long catId);
-
+    boolean existsByCategoryId(Long catId);
     List<Event> findAllByIdIn(List<Long> eventIds);
 
     void deleteByInitiatorId(Long initiatorId);

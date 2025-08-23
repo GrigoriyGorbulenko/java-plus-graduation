@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.exception.ServerUnavailable;
 
+
 @FeignClient(name = "event-service", path = "/internal/events")
 public interface EventClient {
 
@@ -21,11 +22,16 @@ public interface EventClient {
     @GetMapping
     boolean checkExistsById(@RequestParam Long eventId) throws FeignException;
 
+    @GetMapping("/category")
+    boolean checkExistsEventByCategoryId(@RequestParam Long catId) throws FeignException;
+
     @DeleteMapping
     void deleteEventsByUser(@RequestParam Long userId) throws FeignException;
 
     @GetMapping("/{eventId}")
     default EventFullDto findEventById(Long eventId, Throwable throwable) {
-        throw new ServerUnavailable("Event Server unavailable");
+        throw new ServerUnavailable("Event Сервер недоступен");
     }
+
+
 }

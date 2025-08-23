@@ -14,7 +14,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/requests")
-public class AdminParticipationRequestController {
+public class InternalParticipationRequestController {
 
     private final ParticipationRequestService requestService;
 

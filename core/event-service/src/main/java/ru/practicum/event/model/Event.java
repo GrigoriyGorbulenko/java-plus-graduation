@@ -3,7 +3,6 @@ package ru.practicum.event.model;
 import jakarta.persistence.*;
 import lombok.*;
 import ru.practicum.enums.event.State;
-import ru.practicum.category.model.Category;
 
 
 import java.time.LocalDateTime;
@@ -25,9 +24,8 @@ public class Event {
     @Column(name = "annotation", length = 2000)
     String annotation;
 
-    @ManyToOne
-    @JoinColumn(name = "category_id")
-    Category category;
+    @Column(name = "category_id")
+    Long categoryId;
 
     @Column(name = "confirmed_requests")
     Integer confirmedRequests;

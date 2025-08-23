@@ -18,6 +18,7 @@
         <module>request-service</module>
         <module>comment-service</module>
         <module>event-service</module>
+        <module>category-service</module>
     </modules>
 
 </project>
