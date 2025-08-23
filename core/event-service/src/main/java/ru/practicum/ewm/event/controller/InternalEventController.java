@@ -21,6 +21,11 @@ public class InternalEventController {
         eventService.updateConfirmedRequests(eventId, confirmedRequests);
     }
 
+    @GetMapping("/category")
+    public boolean checkExistsByCategoryId(@RequestParam Long catId) {
+        return eventService.checkExistsByCategoryId(catId);
+    }
+
     @GetMapping
     public boolean checkExistsById(@RequestParam Long eventId) {
         return eventService.checkExistsById(eventId);

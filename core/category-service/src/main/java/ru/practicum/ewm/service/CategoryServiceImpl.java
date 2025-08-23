@@ -1,22 +1,19 @@
-package ru.practicum.ewm.category.service;
+package ru.practicum.ewm.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ru.practicum.ewm.dto.category.CategoryDto;
 import ru.practicum.ewm.dto.category.NewCategoryDto;
-import ru.practicum.ewm.category.mapper.CategoryMapper;
-import ru.practicum.ewm.category.model.Category;
-import ru.practicum.ewm.category.repository.CategoryRepository;
-import ru.practicum.ewm.event.repository.EventRepository;
 import ru.practicum.ewm.exception.ConflictDataException;
 import ru.practicum.ewm.exception.DuplicateException;
 import ru.practicum.ewm.exception.NotFoundException;
-
-
+import ru.practicum.ewm.feign.EventClient;
+import ru.practicum.ewm.mapper.CategoryMapper;
+import ru.practicum.ewm.model.Category;
+import ru.practicum.ewm.repository.CategoryRepository;
 
 import java.util.List;
 
@@ -27,7 +24,7 @@ import java.util.List;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
-    private final EventRepository eventRepository;
+    private final EventClient eventClient;
 
     @Transactional
     @Override
@@ -46,7 +43,8 @@ public class CategoryServiceImpl implements CategoryService {
         if (!categoryRepository.existsById(catId)) {
             throw new NotFoundException("Категория не найдена");
         }
-        if (eventRepository.existsByCategoryId(catId)) {
+
+        if (eventClient.checkExistsEventByCategoryId(catId)) {
             throw new ConflictDataException("Нельзя удалить категорию с привязанными событиями");
         }
         categoryRepository.deleteById(catId);

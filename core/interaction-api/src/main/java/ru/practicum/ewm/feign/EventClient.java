@@ -21,6 +21,9 @@ public interface EventClient {
     @GetMapping
     boolean checkExistsById(@RequestParam Long eventId) throws FeignException;
 
+    @GetMapping("/category")
+    boolean checkExistsEventByCategoryId(@RequestParam Long catId) throws FeignException;
+
     @DeleteMapping
     void deleteEventsByUser(@RequestParam Long userId) throws FeignException;
 

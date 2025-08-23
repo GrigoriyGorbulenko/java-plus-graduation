@@ -34,6 +34,7 @@ public interface EventService {
 
     @Transactional
     void updateConfirmedRequests(Long eventId, Integer confirmedRequests);
+    Boolean checkExistsByCategoryId(Long catId);
 
     boolean checkExistsById(Long eventId);
 

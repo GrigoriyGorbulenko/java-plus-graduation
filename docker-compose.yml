@@ -74,6 +74,21 @@ services:
       interval: 5s
       retries: 10
 
+  category-db:
+    image: postgres:16.1
+    container_name: postgres-category-service-db
+    ports:
+      - "6547:5432"
+    environment:
+      - POSTGRES_PASSWORD=category
+      - POSTGRES_USER=category
+      - POSTGRES_DB=category-db
+    healthcheck:
+      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
+      timeout: 5s
+      interval: 5s
+      retries: 10
+
   analyzer-db:
     image: postgres:16.1
     container_name: postgres-analyzer-db

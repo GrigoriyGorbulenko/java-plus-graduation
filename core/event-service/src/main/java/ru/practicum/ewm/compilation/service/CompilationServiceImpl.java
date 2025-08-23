@@ -19,6 +19,7 @@ import ru.practicum.ewm.event.repository.EventRepository;
 
 
 import ru.practicum.ewm.exception.NotFoundException;
+import ru.practicum.ewm.feign.CategoryClient;
 import ru.practicum.ewm.feign.UserClient;
 
 import java.time.LocalDateTime;
@@ -33,6 +34,7 @@ public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final EventRepository eventRepository;
     private final UserClient userClient;
+    private final CategoryClient categoryClient;
 
     @Override
     @Transactional
@@ -132,7 +134,8 @@ public class CompilationServiceImpl implements CompilationService {
 
         return events.stream().map(event ->
                         EventMapper.mapToShortDto(event, 0d, usersMap.getOrDefault(event.getInitiatorId(),
-                                UserDto.builder().id(event.getInitiatorId()).name("UNKNOWN").build())))
+                                UserDto.builder().id(event.getInitiatorId()).name("UNKNOWN").build()),
+                                categoryClient.getCategoryById(event.getCategoryId())))
                 .toList();
     }
 }
