@@ -11,7 +11,8 @@ spring:
         - id: event_service_route
           uri: lb://event-service
           predicates:
-            - Path=/admin/categories/**,/categories/**,/admin/compilations/**,/compilations/**,/admin/events/**,/users/{userId}/events/**,/events/**
+            - Path=/admin/compilations/**,/compilations/**,/admin/events/**,/users/{userId}/events/**,/events/**,
+              /internal/events**
 
         - id: comment_service_route
           uri: lb://comment-service
@@ -27,3 +28,8 @@ spring:
           uri: lb://user-service
           predicates:
             - Path=/admin/users/**
+
+        - id: category_service_rote
+          uri: lb://category-service
+          predicates:
+            - Path=/admin/categories/**,/categories/**

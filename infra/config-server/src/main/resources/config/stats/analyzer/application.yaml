@@ -1,0 +1,45 @@
+grpc:
+  server:
+    port: 0
+
+kafka:
+  bootstrap-servers: localhost:9092
+  properties:
+    consumer:
+      user-action-client-id: userAction
+      user-action-group-id: userActionGroup
+      key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
+      user-action-deserializer: ru.practicum.ewm.deserializer.UserActionDeserializer
+      enable-auto-commit: false
+      poll-timeout: 500
+      similarity-client-id: similarityClient
+      similarity-group-id: similarityGroup
+      event-similarity-deserializer: ru.practicum.ewm.deserializer.EventSimilarityDeserializer
+  topics:
+    user-action: stats.user-actions.v1
+    events-similarity: stats.events-similarity.v1
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+    show_sql: false
+
+  sql:
+    init:
+      mode: always
+
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5443/analyzer-db
+    username: analyzer
+    password: analyzer
+
+application:
+  action-weight:
+    view: 0.4
+    register: 0.8
+    like: 1.0
